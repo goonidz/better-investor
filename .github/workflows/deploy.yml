@@ -1,0 +1,27 @@
+name: Deploy to Namecheap
+
+on:
+  push:
+    branches:
+      - main  # Déploie automatiquement quand on push sur main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Deploy via FTP
+      uses: SamKirkland/FTP-Deploy-Action@4.3.3
+      with:
+        server: ${{ secrets.FTP_SERVER }}
+        username: ${{ secrets.FTP_USERNAME }}
+        password: ${{ secrets.FTP_PASSWORD }}
+        server-dir: /public_html/  # Ajustez selon votre configuration Namecheap
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          .github/**
