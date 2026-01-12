@@ -19,9 +19,10 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
-        server-dir: /public_html/  # Ajustez selon votre configuration Namecheap
+        server-dir: /public_html/
         exclude: |
           **/.git*
           **/.git*/**
           **/node_modules/**
           .github/**
+          README.md
