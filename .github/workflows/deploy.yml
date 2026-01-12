@@ -13,14 +13,22 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
     
-    - name: Deploy via SFTP with SSH Key
-      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
+    - name: Deploy via FTP
+      uses: SamKirkland/FTP-Deploy-Action@4.3.3
       with:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
-        ssh_private_key: ${{ secrets.SSH_PRIVATE_KEY }}
-        port: 22
-        local_path: './*'
-        remote_path: '/home/${{ secrets.FTP_USERNAME }}/tom.better-investor.co'
-        sftp_only: true
-        args: '-o ConnectTimeout=5 -o StrictHostKeyChecking=no'
+        password: ${{ secrets.FTP_PASSWORD }}
+        port: 21
+        protocol: ftps
+        server-dir: /deploy/
+        timeout: 300000
+        log-level: verbose
+        exclude: |
+          **/.git*
+          **/.git*/**
+          **/node_modules/**
+          .github/**
+          README.md
+          DEPLOYMENT.md
+          QUICK_START.md
