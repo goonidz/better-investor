@@ -19,10 +19,16 @@ jobs:
         server: ${{ secrets.FTP_SERVER }}
         username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
+        port: 21
+        protocol: ftp
         server-dir: /tom.better-investor.co/
+        timeout: 60000
+        log-level: verbose
         exclude: |
           **/.git*
           **/.git*/**
           **/node_modules/**
           .github/**
           README.md
+          DEPLOYMENT.md
+          QUICK_START.md
