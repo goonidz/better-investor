@@ -1,64 +1,122 @@
-# Better Investor
+# 🚀 Better Investor
 
-Site web pour Better Investor.
+Site web professionnel avec déploiement automatique.
 
-## Déploiement automatique
+## 📋 À Propos
 
-Ce projet est configuré pour se déployer automatiquement sur Namecheap à chaque push sur la branche `main`.
+Better Investor est un outil de planification financière et de retraite développé par **Tom - Lazy Investor**.
 
-## Configuration initiale
+- **Site en production** : https://tom.better-investor.co
+- **Repository** : https://github.com/goonidz/better-investor
+- **Statut du déploiement** : ![Deploy Status](https://github.com/goonidz/better-investor/actions/workflows/deploy.yml/badge.svg)
 
-### 1. Créer le dépôt GitHub
+## ✨ Fonctionnalités
 
-1. Allez sur https://github.com/new
-2. Créez un nouveau dépôt (public ou privé)
-3. Ne pas initialiser avec README, .gitignore ou license (on les a déjà)
+- 📊 **Retirement Planner** - Calculateur de retraite avec projections
+- 📈 **Investment Simulator** - Simulateur d'investissements
+- 🎨 **Design Moderne** - Interface élégante avec Tailwind CSS
+- 🚀 **Déploiement Automatique** - Mise à jour instantanée via GitHub Actions
 
-### 2. Configurer les secrets GitHub
+## 🔧 Technologies
 
-Pour le déploiement automatique, ajoutez ces secrets dans votre dépôt GitHub :
+- **Frontend** : HTML5, Tailwind CSS, Chart.js
+- **Hébergement** : Namecheap
+- **CI/CD** : GitHub Actions + FTP Deploy
+- **Version Control** : Git + GitHub
 
-1. Allez dans Settings > Secrets and variables > Actions
-2. Ajoutez ces secrets :
-   - `FTP_SERVER` : Votre serveur FTP Namecheap (ex: ftp.votredomaine.com)
-   - `FTP_USERNAME` : Votre nom d'utilisateur FTP
-   - `FTP_PASSWORD` : Votre mot de passe FTP
+## 🚀 Déploiement
 
-### 3. Trouver vos informations FTP Namecheap
+Ce projet utilise un système de **déploiement automatique** :
 
-1. Connectez-vous à votre compte Namecheap
-2. Allez dans cPanel
-3. Cherchez "FTP Accounts" ou "Comptes FTP"
-4. Vous y trouverez :
-   - Server: généralement `ftp.votredomaine.com` ou `votredomaine.com`
-   - Username: votre nom d'utilisateur
-   - Créez un mot de passe si nécessaire
-
-### 4. Pousser le code
-
-```bash
-# Initialiser Git
-git init
-git add .
-git commit -m "Initial commit"
-
-# Ajouter le dépôt distant (remplacez USERNAME et REPO)
-git remote add origin https://github.com/USERNAME/REPO.git
-
-# Pousser le code
-git branch -M main
-git push -u origin main
+```
+Code Local → GitHub → Namecheap (automatique)
 ```
 
-## Comment ça marche ?
+### Quick Start
 
-Une fois configuré :
-1. Vous (ou l'IA) faites des modifications
-2. Vous poussez sur GitHub
-3. GitHub Actions détecte le push
-4. Le code est automatiquement uploadé sur Namecheap via FTP
-5. Le site est mis à jour automatiquement !
+```bash
+# Modifier le code
+git add .
+git commit -m "Description des modifications"
+git push
 
-## Développement local
+# ✅ Le site se met à jour automatiquement en 1-2 minutes !
+```
 
-Ouvrez simplement `index.html` dans votre navigateur pour tester localement.
+### 📚 Documentation Complète
+
+Pour le setup complet, la configuration et le troubleshooting, consultez :
+
+**👉 [DEPLOYMENT.md](./DEPLOYMENT.md) - Guide Complet de Déploiement**
+
+Ce guide couvre :
+- 🏗️ Architecture du système
+- 📋 Setup initial étape par étape
+- 🚀 Comment déployer des modifications
+- 🔐 Configuration des secrets
+- 🐛 Résolution de problèmes
+- 💡 Bonnes pratiques Git
+
+## 🏃 Développement Local
+
+```bash
+# Cloner le repository
+git clone https://github.com/goonidz/better-investor.git
+cd better-investor
+
+# Ouvrir dans le navigateur
+open index.html  # macOS
+# ou
+start index.html  # Windows
+```
+
+Pas de build requis ! Pure HTML/CSS/JS.
+
+## 📁 Structure du Projet
+
+```
+better-investor/
+├── .github/workflows/
+│   └── deploy.yml          # Configuration CI/CD
+├── index.html              # Page principale (Retirement Planner)
+├── simulator.html          # Simulateur d'investissement
+├── README.md               # Ce fichier
+└── DEPLOYMENT.md           # Documentation déploiement complète
+```
+
+## 🔄 Workflow de Contribution
+
+1. **Développer localement** : Testez vos modifications
+2. **Commit** : `git commit -m "Description claire"`
+3. **Push** : `git push origin main`
+4. **Automatique** : GitHub Actions déploie sur Namecheap
+5. **Vérifier** : Consultez https://tom.better-investor.co
+
+## 📊 Suivi des Déploiements
+
+Consultez l'historique des déploiements :  
+👉 https://github.com/goonidz/better-investor/actions
+
+- ✅ **Vert** = Déploiement réussi
+- ❌ **Rouge** = Échec (voir les logs)
+- 🟡 **Jaune** = En cours
+
+## 🐛 Problèmes ?
+
+1. Vérifiez les [logs GitHub Actions](https://github.com/goonidz/better-investor/actions)
+2. Consultez le [Guide de Déploiement](./DEPLOYMENT.md)
+3. Ouvrez une [Issue](https://github.com/goonidz/better-investor/issues)
+
+## 📞 Contact
+
+- **Créateur** : Tom - Lazy Investor
+- **Email** : support@better-investor.co
+- **Site** : https://better-investor.co
+
+## 📄 Licence
+
+© 2026 Tom - Lazy Investor. Tous droits réservés.
+
+---
+
+**Made with ❤️ by Tom** | Automated with GitHub Actions 🤖
