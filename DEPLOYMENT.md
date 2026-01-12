@@ -476,6 +476,256 @@ Si vous voulez déployer sur plusieurs sites :
 
 ---
 
+## 🔥 GUIDE SPÉCIFIQUE NAMECHEAP (IMPORTANT !)
+
+### ⚠️ Problèmes Courants et Solutions
+
+Ce guide documente tous les problèmes rencontrés lors de la configuration du déploiement automatique sur Namecheap.
+
+#### 1. **SSH/SFTP Ne Fonctionne Pas (Port 22 Timeout)**
+
+**Symptôme :** `ssh: connect to host *** port 22: Operation timed out`
+
+**Cause :** La plupart des hébergements partagés Namecheap **bloquent SSH depuis l'extérieur** (GitHub Actions ne peut pas se connecter).
+
+**Solution :** Utilisez **FTPS** (FTP sécurisé sur port 21) au lieu de SFTP/SSH.
+
+#### 2. **FTP Timeout ou "ENOTFOUND"**
+
+**Symptôme :** `Error: getaddrinfo ENOTFOUND ***` ou `Connection timed out`
+
+**Causes Possibles :**
+
+a) **Hostname incorrect dans le secret `FTP_SERVER`**
+   - ❌ NE PAS utiliser : `ftp://better-investor.co` (pas de protocole)
+   - ❌ NE PAS utiliser : `ftp.votredomaine.com` (n'existe souvent pas sur hébergement partagé)
+   - ✅ UTILISER : `votredomaine.com` (domaine principal sans préfixe)
+   - ✅ OU : `sous-domaine.votredomaine.com` (le sous-domaine directement)
+   - ✅ OU : `162.0.212.5` (adresse IP du serveur - à trouver dans cPanel)
+
+b) **Compte FTP mal configuré**
+   - Le compte FTP doit pointer vers le **bon sous-domaine/dossier**
+   - Vérifiez le "Directory" dans cPanel > FTP Accounts
+
+#### 3. **Configuration FTP pour Sous-Domaine**
+
+**⚠️ TRÈS IMPORTANT** : Si vous déployez sur un sous-domaine (ex: `tom.votredomaine.com`), vous devez créer un compte FTP spécifique :
+
+**Étapes dans cPanel > FTP Accounts :**
+
+1. Cliquez **"Add FTP Account"**
+2. **Log In** : `deploy` (ou autre nom)
+3. **Domain** : Sélectionnez le sous-domaine (ex: `tom.better-investor.co`)
+4. **Directory** : `/home/USERNAME/tom.better-investor.co/` (chemin du sous-domaine)
+   - ❌ NE PAS utiliser `/public_html/` si c'est un sous-domaine
+   - ✅ Utilisez le chemin spécifique au sous-domaine
+5. **Password** : Générez un mot de passe fort
+6. Cliquez **"Create FTP Account"**
+
+Le username final sera : `deploy@tom.better-investor.co`
+
+**Dans GitHub Secrets :**
+
+```
+FTP_SERVER = tom.better-investor.co (le sous-domaine, SANS ftp://)
+FTP_USERNAME = deploy@tom.better-investor.co (avec le sous-domaine)
+FTP_PASSWORD = votre_mot_de_passe_ftp
+```
+
+**Dans deploy.yml :**
+
+```yaml
+server-dir: /deploy/ 
+# Ou le dossier relatif configuré dans le compte FTP
+```
+
+### ✅ Configuration Qui Fonctionne pour Namecheap
+
+**Secrets GitHub à créer (EXACTEMENT comme ça) :**
+
+| Nom du Secret | Valeur | ⚠️ ATTENTION |
+|---------------|--------|-------------|
+| `FTP_SERVER` | `sous-domaine.votredomaine.com` | SANS `ftp://`, SANS `https://`, juste le hostname |
+| `FTP_USERNAME` | `deploy@sous-domaine.votredomaine.com` | Username complet du compte FTP |
+| `FTP_PASSWORD` | `votre_mot_de_passe_ftp` | Le mot de passe généré dans cPanel |
+
+**Workflow deploy.yml fonctionnel :**
+
+```yaml
+- name: Deploy via FTP
+  uses: SamKirkland/FTP-Deploy-Action@4.3.3
+  with:
+    server: ${{ secrets.FTP_SERVER }}
+    username: ${{ secrets.FTP_USERNAME }}
+    password: ${{ secrets.FTP_PASSWORD }}
+    port: 21                    # Port FTP standard
+    protocol: ftps              # ⚠️ FTPS (sécurisé), PAS ftp ou sftp
+    server-dir: /deploy/        # Dossier relatif dans le compte FTP
+    timeout: 300000             # 5 minutes de timeout
+    log-level: verbose          # Logs détaillés pour debug
+    exclude: |
+      **/.git*
+      **/.git*/**
+      **/node_modules/**
+      .github/**
+      README.md
+      DEPLOYMENT.md
+      QUICK_START.md
+```
+
+### 🧪 Tester la Connexion FTP Localement
+
+**Avant de configurer GitHub Actions**, testez depuis votre Mac pour éviter de perdre du temps :
+
+```bash
+# Test avec curl (déjà installé sur Mac)
+curl -v ftp://votredomaine.com --user deploy@sous-domaine.votredomaine.com:MOT_DE_PASSE
+
+# Ce que vous devez voir :
+# ✅ "220" ou "230 Login successful" = FTP fonctionne !
+# ❌ "Connection timed out" = Port 21 bloqué (problème réseau/FAI)
+# ❌ "530 Login incorrect" = Mauvais username ou password
+```
+
+**Si curl timeout aussi depuis votre Mac :**
+- Votre FAI bloque peut-être le port 21
+- Essayez depuis un hotspot téléphone
+- Vérifiez que le compte FTP est bien actif dans cPanel
+
+### 📋 Checklist Avant de Pousser sur GitHub
+
+Vérifiez TOUT avant de lancer le déploiement :
+
+- [ ] Compte FTP créé dans cPanel pour le bon domaine/sous-domaine
+- [ ] Directory du compte FTP pointe vers le dossier correct du sous-domaine
+- [ ] Secret `FTP_SERVER` ne contient **PAS** `ftp://`, `https://` ou autre protocole
+- [ ] Secret `FTP_SERVER` = hostname/domaine/IP **UNIQUEMENT**
+- [ ] Secret `FTP_USERNAME` correspond exactement au compte créé (avec @domaine)
+- [ ] Secret `FTP_PASSWORD` est correct
+- [ ] Connexion FTP testée localement avec curl (recommandé)
+- [ ] Protocol dans deploy.yml est `ftps` (pas `ftp` ou `sftp`)
+- [ ] Port dans deploy.yml est `21` (pas `22`)
+- [ ] `server-dir` correspond au dossier dans le compte FTP
+
+### 🚫 Ce Qui NE Fonctionne PAS sur Namecheap Shared Hosting
+
+- ❌ SSH/SFTP depuis GitHub Actions (port 22 bloqué par Namecheap)
+- ❌ FTP standard non sécurisé (utilisez FTPS avec `protocol: ftps`)
+- ❌ Hostname `ftp.votredomaine.com` (DNS n'existe souvent pas)
+- ❌ Protocole dans le secret (`ftp://...` ou `https://...`)
+- ❌ Déploiement direct vers `/public_html/` si vous utilisez un sous-domaine
+- ❌ Utiliser le compte FTP du domaine principal pour un sous-domaine
+
+### ✅ Ce Qui Fonctionne
+
+- ✅ FTPS (FTP sécurisé) sur port 21 avec `protocol: ftps`
+- ✅ Compte FTP dédié créé spécifiquement pour le sous-domaine
+- ✅ Hostname = domaine ou sous-domaine (sans préfixe, sans protocole)
+- ✅ Directory du compte FTP pointant vers le bon dossier
+- ✅ Timeout augmenté (300000ms = 5 minutes)
+- ✅ Logs verbose pour faciliter le debug
+
+### 🔍 Trouver les Bonnes Informations dans cPanel
+
+#### 1. Trouver l'adresse IP du serveur :
+- Connectez-vous à cPanel
+- Tapez **"Server Information"** dans la barre de recherche
+- Notez **"Shared IP Address"** (ex: `162.0.212.5`)
+- Vous pouvez utiliser cette IP comme `FTP_SERVER` si le hostname ne fonctionne pas
+
+#### 2. Vérifier/Créer un compte FTP :
+- cPanel > **"FTP Accounts"**
+- Si vous avez déjà un compte : vérifiez le **"Path"** ou **"Directory"**
+- Si non : cliquez **"Add FTP Account"**
+- **IMPORTANT** : Le Directory doit pointer vers le dossier de votre sous-domaine
+
+#### 3. Tester le compte FTP :
+- Dans la liste FTP Accounts, vous verrez :
+  - **Log In** : `deploy@tom.better-investor.co`
+  - **Path** : `/home/bettzsnt/tom.better-investor.co/deploy`
+  - **FTP server** : `ftp.better-investor.co` (mais utilisez juste le domaine sans ftp)
+
+#### 4. Trouver le bon hostname :
+- **Option 1** : Utilisez le sous-domaine : `tom.better-investor.co` ✅
+- **Option 2** : Utilisez le domaine principal : `better-investor.co` ✅
+- **Option 3** : Utilisez l'IP : `162.0.212.5` ✅
+- **Ne pas utiliser** : `ftp.better-investor.co` (n'existe souvent pas) ❌
+
+### 💡 Temps de Déploiement Attendu
+
+Une fois configuré correctement :
+- **Connexion FTP** : 2-3 secondes
+- **Upload des fichiers** : 5-10 secondes (dépend de la taille)
+- **Total** : 10-15 secondes
+- **Disponibilité** : Instantanée après l'upload
+
+Si le déploiement prend plus de 30 secondes ou timeout :
+- Vérifiez les secrets GitHub
+- Vérifiez que le compte FTP est actif
+- Testez la connexion localement avec curl
+
+### 🐛 Debugging : Erreurs Communes
+
+#### Erreur : `getaddrinfo ENOTFOUND ***`
+**Cause** : Le hostname dans `FTP_SERVER` n'existe pas ou contient un protocole
+
+**Solution** :
+1. Enlevez `ftp://` ou `https://` du secret
+2. Essayez le domaine sans `ftp.` devant
+3. Essayez l'IP du serveur
+
+#### Erreur : `Connection timed out`
+**Cause** : Port 21 bloqué ou hostname incorrect
+
+**Solution** :
+1. Testez depuis votre Mac avec curl
+2. Si curl marche mais pas GitHub : vérifiez le hostname dans le secret
+3. Essayez l'IP au lieu du hostname
+
+#### Erreur : `530 Login incorrect`
+**Cause** : Username ou password incorrect
+
+**Solution** :
+1. Vérifiez que `FTP_USERNAME` est le username COMPLET (avec @domaine)
+2. Vérifiez le password dans cPanel
+3. Recréez le compte FTP si nécessaire
+
+#### Erreur : `Could not change to directory`
+**Cause** : Le `server-dir` n'existe pas ou le compte FTP n'y a pas accès
+
+**Solution** :
+1. Vérifiez le Directory du compte FTP dans cPanel
+2. Ajustez `server-dir` dans deploy.yml pour correspondre
+3. Souvent `/deploy/` ou `/` fonctionne
+
+### 📝 Exemple de Configuration Complète (Ce Qui a Fonctionné)
+
+**Pour le projet better-investor :**
+
+**Compte FTP dans cPanel :**
+- Username : `deploy@tom.better-investor.co`
+- Directory : `/home/bettzsnt/tom.better-investor.co/deploy`
+- Password : (généré dans cPanel)
+
+**Secrets GitHub :**
+```
+FTP_SERVER = tom.better-investor.co
+FTP_USERNAME = deploy@tom.better-investor.co
+FTP_PASSWORD = (le mot de passe généré)
+```
+
+**deploy.yml :**
+```yaml
+protocol: ftps
+port: 21
+server-dir: /deploy/
+timeout: 300000
+```
+
+**Résultat :** ✅ Déploiement en 11 secondes !
+
+---
+
 ## 📞 Support & Ressources
 
 ### Documentation Officielle
