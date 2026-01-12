@@ -13,22 +13,14 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v3
     
-    - name: Deploy via FTP
-      uses: SamKirkland/FTP-Deploy-Action@4.3.3
+    - name: Deploy via SFTP
+      uses: wlixcc/SFTP-Deploy-Action@v1.2.4
       with:
-        server: ${{ secrets.FTP_SERVER }}
-        username: ${{ secrets.FTP_USERNAME }}
-        password: ${{ secrets.FTP_PASSWORD }}
-        port: 21
-        protocol: ftp
-        server-dir: /tom.better-investor.co/
-        timeout: 60000
-        log-level: verbose
-        exclude: |
-          **/.git*
-          **/.git*/**
-          **/node_modules/**
-          .github/**
-          README.md
-          DEPLOYMENT.md
-          QUICK_START.md
+        server: ${{ secrets.SFTP_SERVER }}
+        username: ${{ secrets.SFTP_USERNAME }}
+        password: ${{ secrets.SFTP_PASSWORD }}
+        port: 22
+        local_path: './*'
+        remote_path: '/home/${{ secrets.SFTP_USERNAME }}/tom.better-investor.co'
+        sftp_only: true
+        args: '-o ConnectTimeout=5'
