@@ -34,6 +34,31 @@
     .footer-section a { color: #64748b; text-decoration: none; transition: color 0.2s; font-size: 0.9rem; }
     .footer-section a:hover { color: #6366f1; }
     .footer-bottom { border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; color: #94a3b8; font-size: 0.85rem; }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        #planner-app { padding-bottom: 40px; }
+        .copyright-banner { font-size: 11px; padding: 8px 10px; }
+        .setup-card { padding: 24px 20px !important; border-radius: 24px !important; }
+        .btn-giant { font-size: 0.95rem !important; padding: 18px !important; min-height: 64px; }
+        .label-style { font-size: 10px; }
+        .input-box { padding: 12px 14px !important; font-size: 16px; }
+        .chart-section { height: 300px; padding: 15px; border-radius: 20px; }
+        .site-footer { padding: 20px 15px 15px; margin-top: 40px; }
+        .footer-grid { grid-template-columns: 1fr; gap: 20px; text-align: center; }
+        .footer-section { margin-bottom: 15px; }
+        .footer-bottom { font-size: 0.8rem; }
+        header h1 { font-size: 2.5rem !important; }
+        header img { max-width: 250px !important; margin: 15px auto 0 !important; }
+    }
+    
+    @media (max-width: 480px) {
+        .setup-card { padding: 20px 16px !important; }
+        .btn-giant { font-size: 0.85rem !important; padding: 16px !important; min-height: 56px; }
+        header h1 { font-size: 2rem !important; }
+        header img { max-width: 200px !important; }
+        .chart-section { height: 250px; }
+    }
 </style>
 
 <div id="planner-app">
