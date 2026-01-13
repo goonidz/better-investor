@@ -326,6 +326,41 @@
             const yearsNeeded = lifeExpectancy - currentAge;
             const netWithdrawal = annualExpenses - annualIncome; // Net amount needed from savings
             
+            /*
+             * EXACT FORMULA: Present Value of Annuity
+             * n = ln(PMT / (PMT - PV × r)) / ln(1 + r)
+             * 
+             * Where:
+             * - n = number of years money will last
+             * - PV = current savings (principal)
+             * - PMT = annual net withdrawal
+             * - r = real return rate
+             * 
+             * Condition: If PMT <= PV × r, money lasts forever (interest covers withdrawals)
+             */
+            let exactYears = Infinity;
+            const annualInterestGenerated = currentSavings * realReturnRate;
+            
+            if (netWithdrawal > 0) {
+                if (netWithdrawal <= annualInterestGenerated) {
+                    // Interest covers all withdrawals - money lasts forever
+                    exactYears = Infinity;
+                } else if (realReturnRate > 0) {
+                    // Apply the formula
+                    exactYears = Math.log(netWithdrawal / (netWithdrawal - currentSavings * realReturnRate)) / Math.log(1 + realReturnRate);
+                } else {
+                    // No return, simple division
+                    exactYears = currentSavings / netWithdrawal;
+                }
+            }
+            
+            console.log('📊 Exact calculation:', {
+                realReturnRate: (realReturnRate * 100).toFixed(2) + '%',
+                netWithdrawal: netWithdrawal,
+                annualInterestGenerated: annualInterestGenerated.toFixed(2),
+                exactYears: exactYears === Infinity ? 'Forever' : exactYears.toFixed(1)
+            });
+            
             let balance = currentSavings;
             let age = currentAge;
             let labels = [];
@@ -380,9 +415,19 @@
                     finalAge = age;
                 }
                 
-                if (balance <= 0 && moneyLastsYears > 0) {
+                // Stop if money runs out or we've simulated enough years
+                if (balance <= 0 || year > 50) {
                     break;
                 }
+            }
+            
+            // Use exact formula result if available
+            if (exactYears !== Infinity && exactYears > 0) {
+                moneyLastsYears = Math.floor(exactYears);
+                finalAge = currentAge + moneyLastsYears;
+            } else if (netWithdrawal <= 0 || exactYears === Infinity) {
+                moneyLastsYears = yearsNeeded + 50; // Effectively forever
+                finalAge = lifeExpectancy + 50;
             }
             
             // Determine status
