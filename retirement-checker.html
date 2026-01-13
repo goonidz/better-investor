@@ -560,25 +560,36 @@
             }
             
             // Use exact formula result if available
-            if (exactYears !== Infinity && exactYears > 0) {
+            if (netWithdrawal <= 0 || exactYears === Infinity) {
+                // Money grows forever - cap display at life expectancy + reasonable buffer
+                moneyLastsYears = yearsNeeded + 20; // Show 20 years beyond life expectancy
+                finalAge = lifeExpectancy + 20;
+            } else if (exactYears !== Infinity && exactYears > 0) {
                 moneyLastsYears = Math.floor(exactYears);
                 finalAge = currentAge + moneyLastsYears;
-            } else if (netWithdrawal <= 0 || exactYears === Infinity) {
-                moneyLastsYears = yearsNeeded + 50; // Effectively forever
-                finalAge = lifeExpectancy + 50;
+            } else {
+                // Fallback to iteration result
+                // Already calculated in the loop
             }
             
             // Determine status
             let status, statusClass, summaryClass, summaryText;
-            const incomeInfo = annualIncome > 0 ? ` (with <span class="highlight">${fmt.format(annualIncome)}/year</span> in income)` : '';
+            const totalIncome = annualIncome + annualAddition;
+            const incomeInfo = totalIncome > 0 ? ` (with <span class="highlight">${fmt.format(totalIncome)}/year</span> in income + additions)` : '';
             
-            // Special case: Income covers all expenses (money grows forever)
+            // Special case: Income + Additions + Returns cover all expenses (money grows forever)
             if (netWithdrawal <= 0) {
                 status = "GROWING! ✓";
                 statusClass = "bg-emerald-500";
                 summaryClass = "success";
-                summaryText = `<span class="highlight-green">Amazing!</span> Your income (${fmt.format(annualIncome)}/year) covers all your expenses (${fmt.format(annualExpenses)}/year). ` +
-                             `Your savings will actually <span class="highlight-green">GROW</span> over time! You're financially free. 🎉🎉`;
+                
+                const finalBalance = data[data.length - 1] || currentSavings;
+                const projectedAge = Math.min(lifeExpectancy + 20, labels[labels.length - 1]);
+                
+                summaryText = `<span class="highlight-green">Amazing!</span> Your total income (${fmt.format(totalIncome)}/year) ` +
+                             `plus investment returns cover all your expenses (${fmt.format(annualExpenses)}/year). ` +
+                             `Your savings will <span class="highlight-green">GROW to ${fmt.format(finalBalance)}</span> by age ${projectedAge}. ` +
+                             `You're financially free! 🎉🎉`;
             } else if (moneyLastsYears >= yearsNeeded) {
                 status = "SAFE ✓";
                 statusClass = "bg-emerald-500";
