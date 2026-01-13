@@ -204,9 +204,12 @@
                         <thead class="bg-slate-50">
                             <tr>
                                 <th class="label-style text-slate-400">Age</th>
-                                <th class="label-style text-slate-400 text-center">Net Cash Flow</th>
+                                <th class="label-style text-slate-400 text-right">Start Balance</th>
+                                <th class="label-style text-slate-400 text-center">Income</th>
+                                <th class="label-style text-slate-400 text-center">Expenses</th>
+                                <th class="label-style text-slate-400 text-center">Addition</th>
                                 <th class="label-style text-slate-400 text-center">Investment Return</th>
-                                <th class="label-style text-slate-400 text-right">Balance</th>
+                                <th class="label-style text-slate-400 text-right">End Balance</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody"></tbody>
@@ -365,22 +368,53 @@
                         backgroundColor: 'rgba(99, 102, 241, 0.1)',
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 0,
-                        borderWidth: 3
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#6366f1',
+                        pointBorderColor: '#fff',
+                        pointBorderWidth: 2
                     }]
                 },
                 options: { 
                     responsive: true, 
-                    maintainAspectRatio: false, 
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
                     plugins: { 
                         legend: { display: false },
                         tooltip: {
                             enabled: true,
-                            padding: 15,
+                            padding: 16,
                             backgroundColor: '#1e293b',
+                            titleColor: '#fff',
+                            bodyColor: '#cbd5e1',
+                            borderColor: '#6366f1',
+                            borderWidth: 2,
+                            displayColors: false,
                             callbacks: {
-                                title: (tooltipItems) => `Age ${tooltipItems[0].label}`,
-                                label: (ctx) => ` Balance: ${fmt.format(ctx.raw)}`
+                                title: (tooltipItems) => {
+                                    const age = tooltipItems[0].label;
+                                    const year = new Date().getFullYear() + (age - document.getElementById('currentAge').value);
+                                    return `Year ${year} (Age ${age})`;
+                                },
+                                label: (ctx) => {
+                                    const balance = ctx.raw;
+                                    return ` Balance: ${fmt.format(balance)}`;
+                                },
+                                afterLabel: (ctx) => {
+                                    const balance = ctx.raw;
+                                    const withdrawal = parseFloat(document.getElementById('annualExpenses').value) - 
+                                                      parseFloat(document.getElementById('annualIncome').value || 0) - 
+                                                      parseFloat(document.getElementById('annualAddition').value || 0);
+                                    if (withdrawal > 0) {
+                                        return `\n Net Withdrawal: ${fmt.format(withdrawal)}/year`;
+                                    } else {
+                                        return `\n Growing by: ${fmt.format(Math.abs(withdrawal))}/year`;
+                                    }
+                                }
                             }
                         }
                     },
@@ -388,12 +422,13 @@
                         x: { 
                             display: true, 
                             grid: { display: false },
-                            title: { display: true, text: 'Age' }
+                            title: { display: true, text: 'Age', font: { weight: 'bold' } }
                         }, 
                         y: { 
                             display: true, 
+                            grid: { color: '#f1f5f9' },
                             ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'k' },
-                            title: { display: true, text: 'Balance' }
+                            title: { display: true, text: 'Balance', font: { weight: 'bold' } }
                         } 
                     }
                 }
@@ -485,11 +520,14 @@
             for (let year = 1; year <= yearsNeeded + 10; year++) {
                 age = currentAge + year;
                 
+                // Store beginning balance
+                const beginBalance = balance;
+                
                 // Step 1: Apply investment return on beginning-of-year balance
                 const yearReturn = balance * realReturnRate;
                 balance += yearReturn;
                 
-                // Step 2: Withdraw net expenses (expenses - income)
+                // Step 2: Withdraw net expenses (expenses - income - addition)
                 balance -= netWithdrawal;
                 
                 // Store data
@@ -498,14 +536,15 @@
                 
                 // Format for table
                 const statusEmoji = balance > 0 ? '✓' : '⚠️';
-                const netCashFlow = annualIncome - annualExpenses;
-                const cashFlowColor = netCashFlow >= 0 ? 'text-emerald-500' : 'text-red-400';
-                const cashFlowText = netCashFlow >= 0 ? `+${fmt.format(netCashFlow)}` : `${fmt.format(netCashFlow)}`;
+                const rowClass = balance > 0 ? '' : 'bg-red-50';
                 
-                tableHTML += `<tr>
+                tableHTML += `<tr class="${rowClass}">
                     <td class="font-bold text-slate-900">${age}</td>
-                    <td class="text-center ${cashFlowColor} font-bold">${cashFlowText}</td>
-                    <td class="text-center text-indigo-500 font-medium">+${fmt.format(Math.max(0, yearReturn))}</td>
+                    <td class="text-right text-slate-600 font-medium">${fmt.format(beginBalance)}</td>
+                    <td class="text-center text-emerald-500 font-medium">+${fmt.format(annualIncome)}</td>
+                    <td class="text-center text-red-400 font-medium">-${fmt.format(annualExpenses)}</td>
+                    <td class="text-center text-indigo-400 font-medium">${annualAddition > 0 ? '+' + fmt.format(annualAddition) : '-'}</td>
+                    <td class="text-center text-blue-500 font-medium">+${fmt.format(Math.max(0, yearReturn))}</td>
                     <td class="text-right font-black ${balance > 0 ? 'text-slate-900' : 'text-red-500'}">${statusEmoji} ${fmt.format(Math.max(0, balance))}</td>
                 </tr>`;
                 
