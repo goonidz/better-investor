@@ -270,9 +270,37 @@
         }
     }
     
+    // Fonction pour envoyer un événement GA4 avec sendBeacon (survit aux redirections)
+    function trackOptinWithBeacon() {
+        if (formTracked) return;
+        formTracked = true;
+        
+        // Utiliser sendBeacon pour garantir l'envoi même pendant une redirection
+        const measurementId = 'G-PRYY0KZ7HK';
+        const apiSecret = 'YOUR_API_SECRET'; // Pas nécessaire pour les events simples
+        
+        // Méthode 1: gtag avec transport: beacon
+        if (typeof gtag !== 'undefined') {
+            gtag('event', 'email_optin', {
+                'event_category': 'conversion',
+                'event_label': 'Email Opt-in Success',
+                'transport_type': 'beacon'
+            });
+            console.log('🎉 GA4: Email opt-in tracked (with beacon)!');
+        }
+        
+        // Méthode 2 (backup): Envoyer directement via fetch keepalive
+        fetch('https://www.google-analytics.com/g/collect?v=2&tid=' + measurementId + '&en=email_optin&_p=' + Math.random(), {
+            method: 'POST',
+            keepalive: true,
+            headers: {'Content-Type': 'text/plain'},
+            body: ''
+        }).catch(function() {});
+    }
+    
     // Fonction pour tracker la soumission du formulaire
     function setupFormTracking(iframe) {
-        // Écouter les messages postMessage de systeme.io
+        // 1. Écouter les messages postMessage de systeme.io
         window.addEventListener('message', function(event) {
             // Systeme.io envoie des messages, on log tous pour debug
             if (event.origin && event.origin.includes('systeme')) {
@@ -284,36 +312,59 @@
                      dataStr.includes('submitted') || 
                      dataStr.includes('subscribed') ||
                      dataStr.includes('thank'))) {
-                    
-                    if (!formTracked && typeof gtag !== 'undefined') {
-                        gtag('event', 'email_optin', {
-                            'event_category': 'conversion',
-                            'event_label': 'Email Opt-in Success'
-                        });
-                        formTracked = true;
-                        console.log('🎉 GA4: Email opt-in tracked (via postMessage)!');
-                    }
+                    trackOptinWithBeacon();
                 }
             }
         });
         
-        // Backup: Observer les changements de style de l'iframe (fermeture = succès potentiel)
+        // 2. Détecter le clic sur le bouton dans l'iframe (via clicks sur l'iframe elle-même)
+        let lastClickTime = 0;
+        if (iframe) {
+            iframe.addEventListener('click', function() {
+                lastClickTime = Date.now();
+                console.log('🖱️ Clic détecté dans l\'iframe popup');
+            });
+            
+            // Ajouter aussi un listener sur mousedown (plus fiable)
+            iframe.addEventListener('mousedown', function() {
+                lastClickTime = Date.now();
+                console.log('🖱️ Mousedown détecté dans l\'iframe popup');
+            });
+        }
+        
+        // 3. Détecter la navigation/redirection (signe que le formulaire a été soumis)
+        window.addEventListener('beforeunload', function() {
+            // Si un clic a eu lieu dans les 2 dernières secondes et qu'on quitte la page
+            if (popupTracked && Date.now() - lastClickTime < 2000) {
+                trackOptinWithBeacon();
+                console.log('🚀 Redirection détectée après clic - tracking opt-in');
+            }
+        });
+        
+        // 4. Détecter si l'URL change (pour les redirections internes)
+        let lastUrl = location.href;
+        new MutationObserver(function() {
+            const currentUrl = location.href;
+            if (currentUrl !== lastUrl) {
+                lastUrl = currentUrl;
+                if (popupTracked && Date.now() - lastClickTime < 2000) {
+                    trackOptinWithBeacon();
+                    console.log('🔀 Changement d\'URL détecté après clic - tracking opt-in');
+                }
+            }
+        }).observe(document, { subtree: true, childList: true });
+        
+        // 5. Backup: Observer les changements de style de l'iframe (fermeture = succès potentiel)
         const styleObserver = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
                     const style = window.getComputedStyle(iframe);
-                    // Si l'iframe disparaît, considérer que c'est un succès potentiel
-                    if (style.display === 'none' || style.visibility === 'hidden') {
-                        if (!formTracked && popupTracked && typeof gtag !== 'undefined') {
-                            // Attendre un peu pour confirmer
-                            setTimeout(function() {
-                                gtag('event', 'email_optin', {
-                                    'event_category': 'conversion',
-                                    'event_label': 'Email Opt-in Success (inferred)'
-                                });
-                                formTracked = true;
-                                console.log('🎉 GA4: Email opt-in tracked (via iframe closure)!');
-                            }, 500);
+                    // Si l'iframe disparaît peu après un clic
+                    if ((style.display === 'none' || style.visibility === 'hidden') && 
+                        Date.now() - lastClickTime < 3000) {
+                        if (!formTracked && popupTracked) {
+                            trackOptinWithBeacon();
+                            console.log('🎉 GA4: Email opt-in tracked (via iframe closure after click)!');
                         }
                     }
                 }
