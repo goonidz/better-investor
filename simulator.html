@@ -52,6 +52,20 @@
         .fade-in { animation: fadeIn 0.8s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         
+        /* Info Banner */
+        .info-banner { 
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 20px;
+            text-align: center;
+            margin: 0 auto 40px;
+            max-width: 850px;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2);
+        }
+        .info-banner strong { font-weight: 800; }
+        .info-banner .icon { font-size: 1.3rem; margin-right: 8px; vertical-align: middle; }
+        
         /* Footer Styles */
         .site-footer { background: #fcfdfe; color: #475569; padding: 30px 20px 20px; margin-top: 60px; border-top: 1px solid #e2e8f0; }
         .footer-content { max-width: 1200px; margin: 0 auto; }
@@ -102,6 +116,12 @@
             <h1 class="text-5xl md:text-6xl font-black text-slate-900 tracking-tight">Retirement Planner</h1>
             <p class="text-slate-400 mt-4 text-xl font-medium">Engineer your exit from the 9-to-5.</p>
         </header>
+
+        <!-- Info Banner -->
+        <div class="info-banner">
+            <span class="icon">✓</span>
+            <strong>No Email Required!</strong> This page is fully accessible. Start your projections now and explore your retirement path without any restrictions.
+        </div>
 
         <section class="setup-card">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-10 text-left">
