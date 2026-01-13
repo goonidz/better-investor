@@ -201,108 +201,136 @@
     let popupTracked = false;
     let formTracked = false;
     
-    // Observer pour détecter l'ouverture du popup
-    const observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            mutation.addedNodes.forEach(function(node) {
-                // Détecter le popup systeme.io (ils utilisent généralement iframe ou modal)
-                if (node.nodeType === 1) {
-                    // Vérifie si c'est un popup/modal/iframe de systeme.io
-                    if ((node.tagName === 'IFRAME' && node.src && node.src.includes('systeme')) ||
-                        (node.className && (node.className.includes('systeme') || 
-                                           node.className.includes('popup') || 
-                                           node.className.includes('modal'))) ||
-                        (node.id && node.id.includes('systeme'))) {
-                        
-                        if (!popupTracked && typeof gtag !== 'undefined') {
-                            gtag('event', 'popup_opened', {
-                                'event_category': 'engagement',
-                                'event_label': 'Email Popup Opened'
-                            });
-                            popupTracked = true;
-                            console.log('✅ GA4: Popup opened tracked');
-                        }
-                        
-                        // Essayer de détecter la soumission du formulaire
-                        trackFormSubmission(node);
-                    }
-                    
-                    // Chercher aussi dans les enfants
-                    if (node.querySelector) {
-                        const iframe = node.querySelector('iframe[src*="systeme"], iframe[src*="better-investor"]');
-                        const modal = node.querySelector('[class*="popup"], [class*="modal"], [class*="systeme"]');
-                        
-                        if ((iframe || modal) && !popupTracked && typeof gtag !== 'undefined') {
-                            gtag('event', 'popup_opened', {
-                                'event_category': 'engagement',
-                                'event_label': 'Email Popup Opened'
-                            });
-                            popupTracked = true;
-                            console.log('✅ GA4: Popup opened tracked');
-                            
-                            trackFormSubmission(iframe || modal);
-                        }
-                    }
-                }
+    // Fonction pour tracker l'ouverture du popup
+    function trackPopupOpen() {
+        if (!popupTracked && typeof gtag !== 'undefined') {
+            gtag('event', 'popup_opened', {
+                'event_category': 'engagement',
+                'event_label': 'Email Popup Opened'
             });
-        });
-    });
+            popupTracked = true;
+            console.log('✅ GA4: Popup opened tracked');
+        }
+    }
+    
+    // Fonction pour détecter si l'iframe est visible
+    function checkIframeVisibility(iframe) {
+        if (!iframe) return false;
+        
+        const rect = iframe.getBoundingClientRect();
+        const style = window.getComputedStyle(iframe);
+        
+        // Vérifie si l'iframe est visible (pas display:none, pas opacity:0, pas visibility:hidden)
+        return rect.width > 0 && 
+               rect.height > 0 && 
+               style.display !== 'none' && 
+               style.visibility !== 'hidden' && 
+               parseFloat(style.opacity) > 0;
+    }
+    
+    // Fonction pour surveiller l'iframe systeme.io
+    function watchSystemeIframe() {
+        const iframe = document.querySelector('iframe[id*="systemeio"]');
+        
+        if (iframe) {
+            console.log('🔍 Iframe systeme.io trouvé, surveillance de la visibilité...');
+            
+            // Utiliser IntersectionObserver pour détecter quand l'iframe devient visible
+            const observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting && entry.intersectionRatio > 0) {
+                        if (checkIframeVisibility(iframe)) {
+                            trackPopupOpen();
+                            observer.disconnect(); // Arrêter d'observer après le premier tracking
+                        }
+                    }
+                });
+            }, { threshold: 0.1 });
+            
+            observer.observe(iframe);
+            
+            // Backup: vérifier périodiquement si l'iframe est visible
+            let checkCount = 0;
+            const visibilityChecker = setInterval(function() {
+                checkCount++;
+                if (checkIframeVisibility(iframe)) {
+                    trackPopupOpen();
+                    clearInterval(visibilityChecker);
+                } else if (checkCount > 100) { // Arrêter après 50 secondes (100 * 500ms)
+                    clearInterval(visibilityChecker);
+                }
+            }, 500);
+            
+            // Setup form submission tracking
+            setupFormTracking(iframe);
+        } else {
+            // Si l'iframe n'existe pas encore, attendre qu'elle soit ajoutée
+            console.log('⏳ En attente de l\'iframe systeme.io...');
+            setTimeout(watchSystemeIframe, 1000);
+        }
+    }
     
     // Fonction pour tracker la soumission du formulaire
-    function trackFormSubmission(element) {
-        // Écouter les messages postMessage du popup (si systeme.io les envoie)
+    function setupFormTracking(iframe) {
+        // Écouter les messages postMessage de systeme.io
         window.addEventListener('message', function(event) {
-            if (event.data && typeof event.data === 'string') {
-                // Systeme.io envoie souvent des messages contenant "success" ou "submitted"
-                if ((event.data.includes('success') || 
-                     event.data.includes('submitted') || 
-                     event.data.includes('subscribed')) && 
-                    !formTracked && typeof gtag !== 'undefined') {
+            // Systeme.io envoie des messages, on log tous pour debug
+            if (event.origin && event.origin.includes('systeme')) {
+                console.log('📨 Message de systeme.io:', event.data);
+                
+                // Essayer de détecter un succès
+                const dataStr = typeof event.data === 'string' ? event.data : JSON.stringify(event.data);
+                if (dataStr && (dataStr.includes('success') || 
+                     dataStr.includes('submitted') || 
+                     dataStr.includes('subscribed') ||
+                     dataStr.includes('thank'))) {
                     
-                    gtag('event', 'email_optin', {
-                        'event_category': 'conversion',
-                        'event_label': 'Email Opt-in Success'
-                    });
-                    formTracked = true;
-                    console.log('🎉 GA4: Email opt-in tracked!');
+                    if (!formTracked && typeof gtag !== 'undefined') {
+                        gtag('event', 'email_optin', {
+                            'event_category': 'conversion',
+                            'event_label': 'Email Opt-in Success'
+                        });
+                        formTracked = true;
+                        console.log('🎉 GA4: Email opt-in tracked (via postMessage)!');
+                    }
                 }
             }
         });
         
-        // Backup: Observer les changements dans le popup pour détecter un succès
-        if (element) {
-            const popupObserver = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    mutation.addedNodes.forEach(function(node) {
-                        if (node.nodeType === 1 && node.textContent) {
-                            const text = node.textContent.toLowerCase();
-                            if ((text.includes('merci') || 
-                                 text.includes('thank') || 
-                                 text.includes('success') || 
-                                 text.includes('confirmé')) && 
-                                !formTracked && typeof gtag !== 'undefined') {
-                                
+        // Backup: Observer les changements de style de l'iframe (fermeture = succès potentiel)
+        const styleObserver = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+                    const style = window.getComputedStyle(iframe);
+                    // Si l'iframe disparaît, considérer que c'est un succès potentiel
+                    if (style.display === 'none' || style.visibility === 'hidden') {
+                        if (!formTracked && popupTracked && typeof gtag !== 'undefined') {
+                            // Attendre un peu pour confirmer
+                            setTimeout(function() {
                                 gtag('event', 'email_optin', {
                                     'event_category': 'conversion',
-                                    'event_label': 'Email Opt-in Success'
+                                    'event_label': 'Email Opt-in Success (inferred)'
                                 });
                                 formTracked = true;
-                                console.log('🎉 GA4: Email opt-in tracked (via text detection)!');
-                            }
+                                console.log('🎉 GA4: Email opt-in tracked (via iframe closure)!');
+                            }, 500);
                         }
-                    });
-                });
+                    }
+                }
             });
-            
-            popupObserver.observe(element, { childList: true, subtree: true });
+        });
+        
+        if (iframe) {
+            styleObserver.observe(iframe, { attributes: true });
         }
     }
     
-    // Commencer à observer le document
-    observer.observe(document.body, {
-        childList: true,
-        subtree: true
-    });
+    // Démarrer la surveillance dès que le DOM est prêt
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', watchSystemeIframe);
+    } else {
+        watchSystemeIframe();
+    }
     
     console.log('👀 GA4: Popup tracker initialized');
 })();
