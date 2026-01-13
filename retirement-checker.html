@@ -577,19 +577,23 @@
             const totalIncome = annualIncome + annualAddition;
             const incomeInfo = totalIncome > 0 ? ` (with <span class="highlight">${fmt.format(totalIncome)}/year</span> in income + additions)` : '';
             
-            // Special case: Income + Additions + Returns cover all expenses (money grows forever)
-            if (netWithdrawal <= 0) {
+            // Check if money is actually growing (final balance > initial balance)
+            const finalBalance = data[data.length - 1] || 0;
+            const isGrowing = finalBalance > currentSavings;
+            
+            // Special case: Money grows over time (not depleting)
+            if (netWithdrawal <= 0 || isGrowing) {
                 status = "GROWING! ✓";
                 statusClass = "bg-emerald-500";
                 summaryClass = "success";
                 
-                const finalBalance = data[data.length - 1] || currentSavings;
-                const projectedAge = Math.min(lifeExpectancy + 20, labels[labels.length - 1]);
+                const projectedAge = labels[labels.length - 1] || lifeExpectancy;
+                const growth = finalBalance - currentSavings;
                 
-                summaryText = `<span class="highlight-green">Amazing!</span> Your total income (${fmt.format(totalIncome)}/year) ` +
-                             `plus investment returns cover all your expenses (${fmt.format(annualExpenses)}/year). ` +
-                             `Your savings will <span class="highlight-green">GROW to ${fmt.format(finalBalance)}</span> by age ${projectedAge}. ` +
-                             `You're financially free! 🎉🎉`;
+                summaryText = `<span class="highlight-green">Amazing!</span> Your savings are <span class="highlight-green">GROWING!</span> ` +
+                             `From ${fmt.format(currentSavings)} to <span class="highlight-green">${fmt.format(finalBalance)}</span> by age ${projectedAge} ` +
+                             `(+${fmt.format(growth)} growth). ` +
+                             `Your investment returns and income (${fmt.format(totalIncome)}/year) outpace your expenses. You're financially free! 🎉🎉`;
             } else if (moneyLastsYears >= yearsNeeded) {
                 status = "SAFE ✓";
                 statusClass = "bg-emerald-500";
