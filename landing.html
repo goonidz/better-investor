@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Your Path to Financial Freedom - Better Investor</title>
+    
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    
     <script src="https://cdn.tailwindcss.com"></script>
     
     <style>
@@ -124,7 +134,7 @@
         <div class="max-w-5xl mx-auto">
             <h1 class="text-5xl md:text-6xl font-black mb-6 text-slate-900">Engineer Your Exit From the 9-to-5</h1>
             <p class="text-xl md:text-2xl mb-8 text-slate-600">Calculate your path to financial freedom with our powerful retirement planning simulator</p>
-            <a href="/index.html" class="cta-button">Start Your Journey →</a>
+            <a href="/index.html" class="cta-button" onclick="gtag('event', 'click_cta', {'button_location': 'hero', 'button_text': 'Start Your Journey'});">Start Your Journey →</a>
         </div>
     </div>
 
@@ -230,7 +240,7 @@
             <p class="text-xl text-slate-600 mb-8 max-w-2xl mx-auto">
                 Join thousands of people who've already calculated their path to financial independence.
             </p>
-            <a href="/index.html" class="cta-button">Calculate Your Freedom Number →</a>
+            <a href="/index.html" class="cta-button" onclick="gtag('event', 'click_cta', {'button_location': 'bottom', 'button_text': 'Calculate Your Freedom Number'});">Calculate Your Freedom Number →</a>
             <p class="text-sm text-slate-500 mt-6">⚡ Takes less than 1 minute · No signup required</p>
         </section>
     </div>
