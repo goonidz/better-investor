@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retirement Checker - Better Investor</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRYY0KZ7HK"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-PRYY0KZ7HK', {
+            'send_page_view': true,
+            'allow_enhanced_conversions': false,
+            'allow_google_signals': false
+        });
+        
+        // Désactiver les événements automatiques non désirés
+        gtag('set', 'allow_ad_personalization_signals', false);
+    </script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fcfdfe; color: #1e293b; overflow-x: hidden; }
+        
+        .input-box { border: 2px solid #e2e8f0 !important; border-radius: 16px !important; padding: 14px 18px !important; width: 100% !important; background: #ffffff !important; outline: none !important; font-weight: 600; transition: all 0.2s; }
+        .input-box:focus { border-color: #6366f1 !important; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important; }
+        
+        .setup-card { background: white !important; border-radius: 40px !important; border: 1px solid #f1f5f9 !important; padding: 48px !important; max-width: 950px; margin: 0 auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.04); }
+        
+        .btn-giant { background-color: #6366f1 !important; color: white !important; font-weight: 800 !important; font-size: 1.1rem !important; padding: 20px !important; border-radius: 22px !important; width: 100% !important; text-transform: uppercase !important; letter-spacing: 0.1em; cursor: pointer; border: none; transition: all 0.3s ease; }
+        .btn-giant:hover { background-color: #4f46e5 !important; transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.3) !important; }
+
+        .btn-bottom { background-color: #ffffff !important; color: #6366f1 !important; font-weight: 800 !important; padding: 18px 32px !important; border-radius: 20px !important; border: 2px solid #6366f1 !important; text-transform: uppercase !important; cursor: pointer; transition: all 0.2s ease; }
+
+        .chart-section { position: relative; height: 500px; border-radius: 40px; background: #ffffff; margin-top: 20px; }
+        .label-style { display: block; font-size: 11px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 10px; }
+        
+        .results-table { display: table !important; width: 100% !important; border-collapse: collapse !important; table-layout: fixed; }
+        .results-table thead { display: table-header-group !important; }
+        .results-table tr { display: table-row !important; }
+        .results-table th, .results-table td { display: table-cell !important; padding: 16px 12px !important; border-bottom: 1px solid #f8fafc !important; }
+
+        .summary-box { background: linear-gradient(145deg, #f5f7ff, #ffffff); border: 1px solid #e0e7ff; border-radius: 30px; padding: 30px; margin-bottom: 20px; text-align: center; }
+        .summary-box.success { background: linear-gradient(145deg, #f0fdf4, #ffffff); border: 1px solid #bbf7d0; }
+        .summary-box.warning { background: linear-gradient(145deg, #fef3c7, #ffffff); border: 1px solid #fde047; }
+        .summary-box.danger { background: linear-gradient(145deg, #fee2e2, #ffffff); border: 1px solid #fca5a5; }
+        .highlight { color: #6366f1; font-weight: 800; }
+        .highlight-green { color: #10b981; font-weight: 800; }
+        .highlight-red { color: #ef4444; font-weight: 800; }
+        .highlight-orange { color: #f59e0b; font-weight: 800; }
+        
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Footer Styles */
+        .site-footer { background: #fcfdfe; color: #475569; padding: 30px 20px 20px; margin-top: 60px; border-top: 1px solid #e2e8f0; }
+        .footer-content { max-width: 1200px; margin: 0 auto; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 20px; }
+        .footer-section h3 { color: #1e293b; font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; }
+        .footer-section ul { list-style: none; padding: 0; margin: 0; }
+        .footer-section ul li { margin-bottom: 6px; }
+        .footer-section a { color: #64748b; text-decoration: none; transition: color 0.2s; font-size: 0.9rem; }
+        .footer-section a:hover { color: #6366f1; }
+        .footer-bottom { border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; color: #94a3b8; font-size: 0.85rem; }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body { padding: 20px 15px; }
+            header h1 { font-size: 3rem !important; line-height: 1.1; }
+            header p { font-size: 1.1rem !important; }
+            .setup-card { padding: 32px 24px !important; border-radius: 28px !important; }
+            .btn-giant { font-size: 1.1rem !important; padding: 20px !important; min-height: 70px; }
+            .btn-bottom { font-size: 1rem !important; padding: 16px 28px !important; }
+            .label-style { font-size: 12px; margin-bottom: 8px; }
+            .input-box { padding: 16px 18px !important; font-size: 18px !important; border-radius: 14px !important; }
+            .chart-section { height: 400px; }
+            .summary-box { padding: 25px; border-radius: 24px; font-size: 1.1rem; }
+            .site-footer { padding: 25px 20px 20px; margin-top: 50px; }
+            .footer-grid { grid-template-columns: 1fr; gap: 25px; text-align: center; }
+            .footer-section { margin-bottom: 20px; }
+            .footer-section h3 { font-size: 1.1rem; }
+            .footer-section a { font-size: 1rem; }
+            .footer-bottom { font-size: 0.9rem; }
+        }
+        
+        @media (max-width: 480px) {
+            header h1 { font-size: 2.5rem !important; }
+            header p { font-size: 1rem !important; }
+            .setup-card { padding: 28px 20px !important; }
+            .btn-giant { font-size: 1rem !important; padding: 18px !important; min-height: 65px; }
+            .chart-section { height: 350px; }
+            .results-table th, .results-table td { padding: 12px 10px !important; font-size: 0.95rem; }
+            .label-style { font-size: 11px; }
+            .input-box { padding: 15px 16px !important; font-size: 17px !important; }
+        }
+    </style>
+</head>
+<body class="py-20 px-4">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-16">
+            <h1 class="text-5xl md:text-6xl font-black text-slate-900 tracking-tight">Retirement Checker</h1>
+            <p class="text-slate-400 mt-4 text-xl font-medium">Will your money last? Let's find out.</p>
+        </header>
+
+        <section class="setup-card">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-10 text-left">
+                <div class="space-y-8">
+                    <h3 class="label-style">Your Situation</h3>
+                    <div><label class="label-style text-slate-300">Current Age</label><input type="number" id="currentAge" class="input-box" value="65"></div>
+                    <div><label class="label-style text-slate-300">Life Expectancy</label><input type="number" id="lifeExpectancy" class="input-box" value="90"></div>
+                    <div><label class="label-style text-slate-300">Current Savings ($)</label><input type="number" id="currentSavings" class="input-box" value="500000"></div>
+                </div>
+                <div class="space-y-8">
+                    <h3 class="label-style">Your Spending</h3>
+                    <div><label class="label-style text-slate-300">Annual Expenses ($)</label><input type="number" id="annualExpenses" class="input-box" value="40000"></div>
+                    <div><label class="label-style text-slate-300">Investment Return (%)</label><input type="number" id="returnRate" class="input-box" value="5"></div>
+                    <div><label class="label-style text-slate-300">Inflation (%)</label><input type="number" id="inflationRate" class="input-box" value="3"></div>
+                </div>
+            </div>
+            <button onclick="checkRetirement()" class="btn-giant">Check My Retirement</button>
+        </section>
+
+        <div id="hiddenStats" class="hidden mt-16 space-y-12 fade-in bg-[#fcfdfe] p-4 rounded-3xl">
+            
+            <div id="summaryBox" class="summary-box">
+                <p id="dynamicSummary" class="text-xl font-semibold text-slate-600 leading-relaxed"></p>
+            </div>
+
+            <div class="chart-section bg-white">
+                <div class="h-full w-full px-4"><canvas id="projectionChart"></canvas></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="bg-white p-12 rounded-[3rem] border border-slate-100 shadow-xl text-center">
+                    <p class="label-style text-slate-400">Years Covered</p>
+                    <h3 class="text-5xl font-black text-slate-900 mt-2" id="resYears">0</h3>
+                </div>
+                <div class="bg-[#6366f1] p-12 rounded-[3rem] text-white text-center shadow-2xl shadow-indigo-200">
+                    <p class="label-style text-white/70">Money Lasts Until</p>
+                    <h3 class="text-5xl font-black mt-2" id="resAge">0</h3>
+                </div>
+                <div id="statusCard" class="bg-emerald-500 p-12 rounded-[3rem] text-white text-center shadow-xl">
+                    <p class="label-style text-white/70">Status</p>
+                    <h3 class="text-3xl font-black mt-2" id="resStatus">SAFE</h3>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[3rem] border border-slate-100 overflow-hidden shadow-lg">
+                <div class="p-8 border-b border-slate-50"><h3 class="text-xl font-extrabold text-slate-900">Year-by-Year Projection</h3></div>
+                <div class="overflow-x-auto">
+                    <table class="results-table">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="label-style text-slate-400">Year (Age)</th>
+                                <th class="label-style text-slate-400 text-center">Withdrawal</th>
+                                <th class="label-style text-slate-400 text-center">Investment Return</th>
+                                <th class="label-style text-slate-400 text-right">Remaining Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="text-center pt-10 pb-20">
+                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="btn-bottom">
+                    RE-CHECK
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="footer-content">
+                <div class="footer-grid">
+                    <div class="footer-section">
+                        <h3>Tools</h3>
+                        <ul>
+                            <li><a href="/index.html">Retirement Planner</a></li>
+                            <li><a href="/simulator.html">Simulator</a></li>
+                            <li><a href="/retirement-checker.html">Retirement Checker</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h3>Legal</h3>
+                        <ul>
+                            <li><a href="/terms.html">Terms of Service</a></li>
+                            <li><a href="/privacy.html">Privacy Policy</a></li>
+                            <li><a href="/disclaimer.html">Disclaimer</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h3>Contact</h3>
+                        <ul>
+                            <li><a href="/contact.html">Contact Us</a></li>
+                            <li><a href="mailto:tom@better-investor.co">tom@better-investor.co</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="footer-bottom">
+                    <p>&copy; 2026 Tom - Lazy Investor. All rights reserved.</p>
+                    <p style="margin-top: 10px; font-size: 0.85rem;">This tool is for educational purposes only and does not constitute financial advice.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let myChart;
+        const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+        window.onload = function() {
+            const ctx = document.getElementById('projectionChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Remaining Balance',
+                        data: [],
+                        borderColor: '#6366f1',
+                        backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        borderWidth: 3
+                    }]
+                },
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            enabled: true,
+                            padding: 15,
+                            backgroundColor: '#1e293b',
+                            callbacks: {
+                                title: (tooltipItems) => `Age ${tooltipItems[0].label}`,
+                                label: (ctx) => ` Balance: ${fmt.format(ctx.raw)}`
+                            }
+                        }
+                    },
+                    scales: { 
+                        x: { 
+                            display: true, 
+                            grid: { display: false },
+                            title: { display: true, text: 'Age' }
+                        }, 
+                        y: { 
+                            display: true, 
+                            ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'k' },
+                            title: { display: true, text: 'Balance' }
+                        } 
+                    }
+                }
+            });
+        };
+
+        function checkRetirement() {
+            // Track event
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'check_retirement', {
+                    'event_category': 'engagement',
+                    'event_label': 'Check My Retirement'
+                });
+            }
+            
+            document.getElementById('hiddenStats').classList.remove('hidden');
+
+            const currentAge = parseInt(document.getElementById('currentAge').value);
+            const lifeExpectancy = parseInt(document.getElementById('lifeExpectancy').value);
+            const currentSavings = parseFloat(document.getElementById('currentSavings').value);
+            const annualExpenses = parseFloat(document.getElementById('annualExpenses').value);
+            const returnRate = parseFloat(document.getElementById('returnRate').value) / 100;
+            const inflationRate = parseFloat(document.getElementById('inflationRate').value) / 100;
+            
+            const realReturnRate = ((1 + returnRate) / (1 + inflationRate)) - 1;
+            const yearsNeeded = lifeExpectancy - currentAge;
+            
+            let balance = currentSavings;
+            let age = currentAge;
+            let labels = [];
+            let data = [];
+            let tableHTML = "";
+            let moneyLastsYears = 0;
+            let finalAge = currentAge;
+            
+            // Add starting point
+            labels.push(age);
+            data.push(balance);
+            
+            for (let year = 1; year <= yearsNeeded + 5; year++) {
+                age = currentAge + year;
+                
+                // Withdraw expenses
+                balance -= annualExpenses;
+                
+                // Apply investment return
+                const yearReturn = balance * realReturnRate;
+                balance += yearReturn;
+                
+                labels.push(age);
+                data.push(Math.max(0, balance));
+                
+                const statusEmoji = balance > 0 ? '✓' : '⚠️';
+                const statusColor = balance > 0 ? 'text-emerald-500' : 'text-red-500';
+                
+                tableHTML += `<tr>
+                    <td class="font-bold text-slate-900">${age}</td>
+                    <td class="text-center text-red-400 font-bold">-${fmt.format(annualExpenses)}</td>
+                    <td class="text-center text-emerald-500 font-medium">+${fmt.format(Math.max(0, yearReturn))}</td>
+                    <td class="text-right font-black ${balance > 0 ? 'text-slate-900' : 'text-red-500'}">${statusEmoji} ${fmt.format(Math.max(0, balance))}</td>
+                </tr>`;
+                
+                if (balance > 0) {
+                    moneyLastsYears = year;
+                    finalAge = age;
+                }
+                
+                if (balance <= 0 && moneyLastsYears > 0) {
+                    break;
+                }
+            }
+            
+            // Determine status
+            let status, statusClass, summaryClass, summaryText;
+            
+            if (moneyLastsYears >= yearsNeeded) {
+                status = "SAFE ✓";
+                statusClass = "bg-emerald-500";
+                summaryClass = "success";
+                summaryText = `<span class="highlight-green">Good news!</span> Your money will last <span class="highlight-green">${moneyLastsYears} years</span> (until age <span class="highlight-green">${finalAge}</span>). ` +
+                             `That's <span class="highlight-green">${moneyLastsYears - yearsNeeded} years more</span> than your life expectancy. You're in great shape! 🎉`;
+            } else if (moneyLastsYears >= yearsNeeded * 0.8) {
+                status = "TIGHT";
+                statusClass = "bg-orange-500";
+                summaryClass = "warning";
+                summaryText = `<span class="highlight-orange">Close call.</span> Your money will last <span class="highlight-orange">${moneyLastsYears} years</span> (until age <span class="highlight-orange">${finalAge}</span>). ` +
+                             `You're <span class="highlight-orange">${yearsNeeded - moneyLastsYears} years short</span> of your life expectancy. Consider reducing expenses or working part-time. ⚠️`;
+            } else {
+                status = "AT RISK";
+                statusClass = "bg-red-500";
+                summaryClass = "danger";
+                summaryText = `<span class="highlight-red">Warning!</span> Your money will only last <span class="highlight-red">${moneyLastsYears} years</span> (until age <span class="highlight-red">${finalAge}</span>). ` +
+                             `You're <span class="highlight-red">${yearsNeeded - moneyLastsYears} years short</span> of your life expectancy. You need to make changes now. 🚨`;
+            }
+            
+            // Update UI
+            document.getElementById('resYears').innerText = moneyLastsYears;
+            document.getElementById('resAge').innerText = finalAge;
+            document.getElementById('resStatus').innerHTML = status;
+            document.getElementById('statusCard').className = `${statusClass} p-12 rounded-[3rem] text-white text-center shadow-xl`;
+            document.getElementById('summaryBox').className = `summary-box ${summaryClass}`;
+            document.getElementById('dynamicSummary').innerHTML = summaryText;
+            document.getElementById('tableBody').innerHTML = tableHTML;
+            
+            // Update chart
+            myChart.data.labels = labels;
+            myChart.data.datasets[0].data = data;
+            myChart.update();
+        }
+    </script>
+</body>
+</html>
