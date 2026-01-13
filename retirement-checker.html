@@ -23,6 +23,7 @@
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
         body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fcfdfe; color: #1e293b; overflow-x: hidden; }
@@ -56,6 +57,21 @@
         
         .fade-in { animation: fadeIn 0.8s ease-out forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Trust Banner */
+        .trust-banner { 
+            background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+            color: white;
+            padding: 14px 24px;
+            border-radius: 16px;
+            text-align: center;
+            margin: 0 auto 40px;
+            max-width: 850px;
+            font-size: 0.95rem;
+        }
+        .trust-banner strong { font-weight: 800; }
+        .trust-badges { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 10px; }
+        .trust-badge { background: rgba(255,255,255,0.2); padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; }
         
         /* Footer Styles */
         .site-footer { background: #fcfdfe; color: #475569; padding: 30px 20px 20px; margin-top: 60px; border-top: 1px solid #e2e8f0; }
@@ -108,6 +124,18 @@
             <p class="text-slate-400 mt-4 text-xl font-medium">Will your money last? Let's find out.</p>
         </header>
 
+        <!-- Trust Banner -->
+        <div class="trust-banner">
+            <span>📐</span> <strong>Proven Formula</strong> — Using the same Present Value of Annuity equation trusted by:
+            <div class="trust-badges">
+                <span class="trust-badge">Vanguard</span>
+                <span class="trust-badge">Fidelity</span>
+                <span class="trust-badge">Schwab</span>
+                <span class="trust-badge">CFP Board</span>
+                <span class="trust-badge">Excel NPER()</span>
+            </div>
+        </div>
+
         <section class="setup-card">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-10 text-left">
                 <div class="space-y-8">
@@ -133,7 +161,7 @@
                     </div>
                 </div>
             </div>
-            <button onclick="checkRetirement()" class="btn-giant">Check My Retirement</button>
+            <button onclick="launchCheck()" class="btn-giant">Check My Retirement</button>
         </section>
 
         <div id="hiddenStats" class="hidden mt-16 space-y-12 fade-in bg-[#fcfdfe] p-4 rounded-3xl">
@@ -184,37 +212,6 @@
                 </button>
             </div>
             
-            <!-- Formula Explanation Card -->
-            <div class="bg-slate-50 rounded-3xl p-8 border border-slate-200 mt-8">
-                <div class="flex items-start gap-4">
-                    <div class="text-3xl">📐</div>
-                    <div>
-                        <h3 class="text-lg font-bold text-slate-900 mb-3">The Math Behind This Calculator</h3>
-                        <p class="text-slate-600 mb-4">
-                            This calculator uses the <strong>Present Value of Annuity</strong> formula, a proven financial equation:
-                        </p>
-                        <div class="bg-white rounded-xl p-4 border border-slate-200 mb-4 font-mono text-center text-slate-800">
-                            n = ln(PMT / (PMT - PV × r)) / ln(1 + r)
-                        </div>
-                        <p class="text-slate-600 text-sm mb-4">
-                            Where: <strong>n</strong> = years until depletion, <strong>PV</strong> = current savings, 
-                            <strong>PMT</strong> = annual net withdrawal (expenses - income), <strong>r</strong> = real return rate (adjusted for inflation)
-                        </p>
-                        <div class="flex flex-wrap gap-2 mb-4">
-                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">Vanguard</span>
-                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">Fidelity</span>
-                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">Schwab</span>
-                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">CFP Board</span>
-                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">CFA Institute</span>
-                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">Excel NPER()</span>
-                        </div>
-                        <p class="text-slate-500 text-xs">
-                            This is the same formula used by major financial institutions, certified financial planners, 
-                            and built into Excel's NPER function. The real return rate is calculated using the Fisher equation.
-                        </p>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Footer -->
@@ -285,6 +282,27 @@
             document.getElementById('annualExpenses').addEventListener('input', updateNetWithdrawal);
             updateNetWithdrawal();
         });
+
+        function launchCheck() {
+            // Confetti animation
+            confetti({ 
+                particleCount: 150, 
+                spread: 70, 
+                origin: { y: 0.6 }, 
+                colors: ['#6366f1', '#10b981', '#f59e0b'] 
+            });
+            
+            // Run the calculation
+            checkRetirement();
+            
+            // Scroll to results after a short delay
+            setTimeout(function() {
+                document.getElementById('hiddenStats').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'start' 
+                });
+            }, 300);
+        }
 
         window.onload = function() {
             const ctx = document.getElementById('projectionChart').getContext('2d');
