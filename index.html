@@ -300,78 +300,108 @@
     
     // Fonction pour tracker la soumission du formulaire
     function setupFormTracking(iframe) {
-        // 1. Écouter les messages postMessage de systeme.io
+        console.log('📋 Setup form tracking...');
+        
+        // 1. Écouter TOUS les messages postMessage (pour debug)
         window.addEventListener('message', function(event) {
-            // Systeme.io envoie des messages, on log tous pour debug
-            if (event.origin && event.origin.includes('systeme')) {
-                console.log('📨 Message de systeme.io:', event.data);
-                
-                // Essayer de détecter un succès
+            console.log('📨 Message reçu de:', event.origin, '| Data:', event.data);
+            
+            // Essayer de détecter un succès de systeme.io
+            if (event.origin && event.origin.includes('better-investor')) {
                 const dataStr = typeof event.data === 'string' ? event.data : JSON.stringify(event.data);
                 if (dataStr && (dataStr.includes('success') || 
                      dataStr.includes('submitted') || 
                      dataStr.includes('subscribed') ||
+                     dataStr.includes('confirmed') ||
                      dataStr.includes('thank'))) {
                     trackOptinWithBeacon();
                 }
             }
         });
         
-        // 2. Détecter le clic sur le bouton dans l'iframe (via clicks sur l'iframe elle-même)
-        let lastClickTime = 0;
+        // 2. Détecter quand l'iframe gagne puis perd le focus (= clic dedans)
+        let iframeHadFocus = false;
+        let lastInteractionTime = 0;
+        
+        window.addEventListener('blur', function() {
+            // La fenêtre perd le focus, peut-être à cause d'un clic dans l'iframe
+            if (document.activeElement && document.activeElement.tagName === 'IFRAME') {
+                iframeHadFocus = true;
+                lastInteractionTime = Date.now();
+                console.log('👆 Focus sur l\'iframe détecté (interaction probable)');
+            }
+        });
+        
+        window.addEventListener('focus', function() {
+            // On reprend le focus, l'utilisateur a probablement interagi avec l'iframe
+            if (iframeHadFocus) {
+                lastInteractionTime = Date.now();
+                console.log('🔄 Focus revenu sur la page (après interaction iframe)');
+            }
+        });
+        
+        // 3. Détecter la navigation/redirection
+        window.addEventListener('beforeunload', function(e) {
+            // Si le popup était ouvert ET qu'il y a eu une interaction récente
+            if (popupTracked && lastInteractionTime > 0 && Date.now() - lastInteractionTime < 5000) {
+                trackOptinWithBeacon();
+                console.log('🚀 Redirection détectée après interaction - tracking opt-in');
+            } else if (popupTracked) {
+                // Même sans interaction détectée, si le popup était ouvert, on track
+                trackOptinWithBeacon();
+                console.log('🚀 Redirection détectée avec popup ouvert - tracking opt-in (assumption)');
+            }
+        });
+        
+        // 4. Détecter si l'iframe change de taille ou disparaît (signe de succès)
         if (iframe) {
-            iframe.addEventListener('click', function() {
-                lastClickTime = Date.now();
-                console.log('🖱️ Clic détecté dans l\'iframe popup');
+            const resizeObserver = new ResizeObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    const height = entry.contentRect.height;
+                    const width = entry.contentRect.width;
+                    
+                    // Si l'iframe devient très petite ou invisible
+                    if ((height < 50 || width < 50) && popupTracked && !formTracked) {
+                        console.log('📏 Iframe réduite/cachée - possiblement fermée après soumission');
+                        setTimeout(function() {
+                            if (!formTracked) {
+                                trackOptinWithBeacon();
+                                console.log('🎉 Opt-in tracké (iframe réduite)');
+                            }
+                        }, 500);
+                    }
+                });
             });
             
-            // Ajouter aussi un listener sur mousedown (plus fiable)
-            iframe.addEventListener('mousedown', function() {
-                lastClickTime = Date.now();
-                console.log('🖱️ Mousedown détecté dans l\'iframe popup');
-            });
+            resizeObserver.observe(iframe);
         }
         
-        // 3. Détecter la navigation/redirection (signe que le formulaire a été soumis)
-        window.addEventListener('beforeunload', function() {
-            // Si un clic a eu lieu dans les 2 dernières secondes et qu'on quitte la page
-            if (popupTracked && Date.now() - lastClickTime < 2000) {
-                trackOptinWithBeacon();
-                console.log('🚀 Redirection détectée après clic - tracking opt-in');
-            }
-        });
-        
-        // 4. Détecter si l'URL change (pour les redirections internes)
-        let lastUrl = location.href;
-        new MutationObserver(function() {
-            const currentUrl = location.href;
-            if (currentUrl !== lastUrl) {
-                lastUrl = currentUrl;
-                if (popupTracked && Date.now() - lastClickTime < 2000) {
-                    trackOptinWithBeacon();
-                    console.log('🔀 Changement d\'URL détecté après clic - tracking opt-in');
-                }
-            }
-        }).observe(document, { subtree: true, childList: true });
-        
-        // 5. Backup: Observer les changements de style de l'iframe (fermeture = succès potentiel)
-        const styleObserver = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
-                    const style = window.getComputedStyle(iframe);
-                    // Si l'iframe disparaît peu après un clic
-                    if ((style.display === 'none' || style.visibility === 'hidden') && 
-                        Date.now() - lastClickTime < 3000) {
-                        if (!formTracked && popupTracked) {
-                            trackOptinWithBeacon();
-                            console.log('🎉 GA4: Email opt-in tracked (via iframe closure after click)!');
+        // 5. Observer les changements de style/display de l'iframe
+        if (iframe) {
+            const styleObserver = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.type === 'attributes' && 
+                        (mutation.attributeName === 'style' || mutation.attributeName === 'class')) {
+                        const style = window.getComputedStyle(iframe);
+                        
+                        // Si l'iframe disparaît après avoir été visible
+                        if ((style.display === 'none' || 
+                             style.visibility === 'hidden' || 
+                             parseFloat(style.opacity) < 0.1) && 
+                            popupTracked && !formTracked) {
+                            
+                            console.log('👻 Iframe cachée - possiblement fermée après soumission');
+                            setTimeout(function() {
+                                if (!formTracked) {
+                                    trackOptinWithBeacon();
+                                    console.log('🎉 Opt-in tracké (iframe cachée)');
+                                }
+                            }, 300);
                         }
                     }
-                }
+                });
             });
-        });
-        
-        if (iframe) {
+            
             styleObserver.observe(iframe, { attributes: true });
         }
     }
