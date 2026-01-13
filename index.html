@@ -309,19 +309,59 @@
     function setupFormTracking(iframe) {
         console.log('📋 Setup form tracking...');
         
-        // 1. Écouter TOUS les messages postMessage (pour debug)
+        let lastHeight = null;
+        let heightChangeCount = 0;
+        
+        // 1. Écouter TOUS les messages postMessage (pour debug et tracking)
         window.addEventListener('message', function(event) {
+            // Filtrer les messages metamask (bruit)
+            if (event.data && event.data.target === 'metamask-inpage') {
+                return; // Ignorer metamask
+            }
+            
             console.log('📨 Message reçu de:', event.origin, '| Data:', event.data);
             
-            // Essayer de détecter un succès de systeme.io
-            if (event.origin && event.origin.includes('better-investor')) {
-                const dataStr = typeof event.data === 'string' ? event.data : JSON.stringify(event.data);
+            // Détecter les messages de systeme.io avec dimensions
+            if (event.origin && event.origin.includes('better-investor') && event.data && event.data.sender) {
+                const data = event.data;
+                
+                // Vérifier s'il y a des mots-clés de succès
+                const dataStr = typeof data === 'string' ? data : JSON.stringify(data);
                 if (dataStr && (dataStr.includes('success') || 
                      dataStr.includes('submitted') || 
                      dataStr.includes('subscribed') ||
                      dataStr.includes('confirmed') ||
                      dataStr.includes('thank'))) {
                     trackOptinWithBeacon();
+                    return;
+                }
+                
+                // Tracker les changements de hauteur significatifs
+                if (data.height !== undefined) {
+                    console.log('📏 Hauteur iframe:', data.height);
+                    
+                    if (lastHeight !== null) {
+                        const heightDiff = Math.abs(data.height - lastHeight);
+                        
+                        // Si la hauteur change beaucoup (plus de 100px)
+                        if (heightDiff > 100) {
+                            heightChangeCount++;
+                            console.log('📐 Changement de hauteur détecté:', lastHeight, '→', data.height);
+                            
+                            // Si l'iframe devient très petite (< 200px), c'est probablement fermé
+                            if (data.height < 200 && lastHeight > 300) {
+                                console.log('🎯 Popup probablement fermé après soumission');
+                                setTimeout(function() {
+                                    if (!formTracked) {
+                                        trackOptinWithBeacon();
+                                        console.log('🎉 Opt-in tracké (réduction hauteur)');
+                                    }
+                                }, 500);
+                            }
+                        }
+                    }
+                    
+                    lastHeight = data.height;
                 }
             }
         });
