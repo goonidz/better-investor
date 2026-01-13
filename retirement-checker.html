@@ -111,18 +111,25 @@
         <section class="setup-card">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-10 text-left">
                 <div class="space-y-8">
-                    <h3 class="label-style">Your Situation</h3>
-                    <div><label class="label-style text-slate-300">Current Age</label><input type="number" id="currentAge" class="input-box" value="65"></div>
-                    <div><label class="label-style text-slate-300">Life Expectancy</label><input type="number" id="lifeExpectancy" class="input-box" value="90"></div>
+                    <h3 class="label-style">Step 1: Your Situation</h3>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div><label class="label-style text-slate-300">Current Age</label><input type="number" id="currentAge" class="input-box" value="65"></div>
+                        <div><label class="label-style text-slate-300">Life Expectancy</label><input type="number" id="lifeExpectancy" class="input-box" value="90"></div>
+                    </div>
                     <div><label class="label-style text-slate-300">Current Savings ($)</label><input type="number" id="currentSavings" class="input-box" value="500000"></div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div><label class="label-style text-slate-300">Return (%)</label><input type="number" id="returnRate" class="input-box" value="5"></div>
+                        <div><label class="label-style text-slate-300">Inflation (%)</label><input type="number" id="inflationRate" class="input-box" value="3"></div>
+                    </div>
                 </div>
                 <div class="space-y-8">
-                    <h3 class="label-style">Your Cash Flow</h3>
-                    <div><label class="label-style text-slate-300">Annual Expenses ($)</label><input type="number" id="annualExpenses" class="input-box" value="40000"></div>
+                    <h3 class="label-style">Step 2: Your Cash Flow</h3>
                     <div><label class="label-style text-slate-300">Annual Income ($)</label><input type="number" id="annualIncome" class="input-box" value="20000" placeholder="Pension, Social Security, etc."></div>
-                    <div class="grid grid-cols-2 gap-6">
-                        <div><label class="label-style text-slate-300">Investment Return (%)</label><input type="number" id="returnRate" class="input-box" value="5"></div>
-                        <div><label class="label-style text-slate-300">Inflation (%)</label><input type="number" id="inflationRate" class="input-box" value="3"></div>
+                    <div><label class="label-style text-slate-300">Annual Expenses ($)</label><input type="number" id="annualExpenses" class="input-box" value="40000"></div>
+                    <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200">
+                        <p class="label-style text-slate-400 mb-2">Net Annual Withdrawal</p>
+                        <p class="text-3xl font-black text-slate-900" id="netWithdrawal">$20,000</p>
+                        <p class="text-sm text-slate-500 mt-1">Expenses - Income</p>
                     </div>
                 </div>
             </div>
@@ -220,6 +227,32 @@
     <script>
         let myChart;
         const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+        // Update net withdrawal in real-time
+        function updateNetWithdrawal() {
+            const income = parseFloat(document.getElementById('annualIncome').value) || 0;
+            const expenses = parseFloat(document.getElementById('annualExpenses').value) || 0;
+            const net = expenses - income;
+            const netEl = document.getElementById('netWithdrawal');
+            
+            if (net > 0) {
+                netEl.innerText = fmt.format(net);
+                netEl.className = 'text-3xl font-black text-red-500';
+            } else if (net < 0) {
+                netEl.innerText = '+' + fmt.format(Math.abs(net));
+                netEl.className = 'text-3xl font-black text-emerald-500';
+            } else {
+                netEl.innerText = fmt.format(0);
+                netEl.className = 'text-3xl font-black text-slate-400';
+            }
+        }
+        
+        // Add event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('annualIncome').addEventListener('input', updateNetWithdrawal);
+            document.getElementById('annualExpenses').addEventListener('input', updateNetWithdrawal);
+            updateNetWithdrawal();
+        });
 
         window.onload = function() {
             const ctx = document.getElementById('projectionChart').getContext('2d');
