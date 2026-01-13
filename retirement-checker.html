@@ -617,8 +617,14 @@
             }
             
             // Update UI
-            document.getElementById('resYears').innerText = moneyLastsYears;
-            document.getElementById('resAge').innerText = finalAge;
+            if (isGrowing) {
+                // Show infinity symbol when money is growing
+                document.getElementById('resYears').innerHTML = '<span style="font-size: 4rem;">∞</span>';
+                document.getElementById('resAge').innerHTML = '<span style="font-size: 4rem;">∞</span>';
+            } else {
+                document.getElementById('resYears').innerText = moneyLastsYears;
+                document.getElementById('resAge').innerText = finalAge;
+            }
             document.getElementById('resStatus').innerHTML = status;
             document.getElementById('statusCard').className = `${statusClass} p-12 rounded-[3rem] text-white text-center shadow-xl`;
             document.getElementById('summaryBox').className = `summary-box ${summaryClass}`;
