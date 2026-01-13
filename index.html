@@ -195,6 +195,119 @@
 </html>
 <script id="form-script-tag-22277060" src="https://go-tom.better-investor.co/public/remote/page/368079641e4b498d637ebbc4515679fde11122fd.js"></script>
 
+<!-- Track Systeme.io Popup -->
+<script>
+(function() {
+    let popupTracked = false;
+    let formTracked = false;
+    
+    // Observer pour détecter l'ouverture du popup
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            mutation.addedNodes.forEach(function(node) {
+                // Détecter le popup systeme.io (ils utilisent généralement iframe ou modal)
+                if (node.nodeType === 1) {
+                    // Vérifie si c'est un popup/modal/iframe de systeme.io
+                    if ((node.tagName === 'IFRAME' && node.src && node.src.includes('systeme')) ||
+                        (node.className && (node.className.includes('systeme') || 
+                                           node.className.includes('popup') || 
+                                           node.className.includes('modal'))) ||
+                        (node.id && node.id.includes('systeme'))) {
+                        
+                        if (!popupTracked && typeof gtag !== 'undefined') {
+                            gtag('event', 'popup_opened', {
+                                'event_category': 'engagement',
+                                'event_label': 'Email Popup Opened'
+                            });
+                            popupTracked = true;
+                            console.log('✅ GA4: Popup opened tracked');
+                        }
+                        
+                        // Essayer de détecter la soumission du formulaire
+                        trackFormSubmission(node);
+                    }
+                    
+                    // Chercher aussi dans les enfants
+                    if (node.querySelector) {
+                        const iframe = node.querySelector('iframe[src*="systeme"], iframe[src*="better-investor"]');
+                        const modal = node.querySelector('[class*="popup"], [class*="modal"], [class*="systeme"]');
+                        
+                        if ((iframe || modal) && !popupTracked && typeof gtag !== 'undefined') {
+                            gtag('event', 'popup_opened', {
+                                'event_category': 'engagement',
+                                'event_label': 'Email Popup Opened'
+                            });
+                            popupTracked = true;
+                            console.log('✅ GA4: Popup opened tracked');
+                            
+                            trackFormSubmission(iframe || modal);
+                        }
+                    }
+                }
+            });
+        });
+    });
+    
+    // Fonction pour tracker la soumission du formulaire
+    function trackFormSubmission(element) {
+        // Écouter les messages postMessage du popup (si systeme.io les envoie)
+        window.addEventListener('message', function(event) {
+            if (event.data && typeof event.data === 'string') {
+                // Systeme.io envoie souvent des messages contenant "success" ou "submitted"
+                if ((event.data.includes('success') || 
+                     event.data.includes('submitted') || 
+                     event.data.includes('subscribed')) && 
+                    !formTracked && typeof gtag !== 'undefined') {
+                    
+                    gtag('event', 'email_optin', {
+                        'event_category': 'conversion',
+                        'event_label': 'Email Opt-in Success'
+                    });
+                    formTracked = true;
+                    console.log('🎉 GA4: Email opt-in tracked!');
+                }
+            }
+        });
+        
+        // Backup: Observer les changements dans le popup pour détecter un succès
+        if (element) {
+            const popupObserver = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === 1 && node.textContent) {
+                            const text = node.textContent.toLowerCase();
+                            if ((text.includes('merci') || 
+                                 text.includes('thank') || 
+                                 text.includes('success') || 
+                                 text.includes('confirmé')) && 
+                                !formTracked && typeof gtag !== 'undefined') {
+                                
+                                gtag('event', 'email_optin', {
+                                    'event_category': 'conversion',
+                                    'event_label': 'Email Opt-in Success'
+                                });
+                                formTracked = true;
+                                console.log('🎉 GA4: Email opt-in tracked (via text detection)!');
+                            }
+                        }
+                    });
+                });
+            });
+            
+            popupObserver.observe(element, { childList: true, subtree: true });
+        }
+    }
+    
+    // Commencer à observer le document
+    observer.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+    
+    console.log('👀 GA4: Popup tracker initialized');
+})();
+</script>
+
 <script>
     let myChart;
     const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
