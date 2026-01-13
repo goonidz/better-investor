@@ -33,8 +33,11 @@
         
         .setup-card { background: white !important; border-radius: 40px !important; border: 1px solid #f1f5f9 !important; padding: 48px !important; max-width: 950px; margin: 0 auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.04); }
         
-        .btn-giant { background-color: #6366f1 !important; color: white !important; font-weight: 800 !important; font-size: 1.1rem !important; padding: 20px !important; border-radius: 22px !important; width: 100% !important; text-transform: uppercase !important; letter-spacing: 0.1em; cursor: pointer; border: none; transition: all 0.3s ease; }
+        .btn-giant { background-color: #6366f1 !important; color: white !important; font-weight: 800 !important; font-size: 1.1rem !important; padding: 20px !important; border-radius: 22px !important; width: 100% !important; text-transform: uppercase !important; letter-spacing: 0.1em; cursor: pointer; border: none; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 12px; min-height: 80px; }
         .btn-giant:hover { background-color: #4f46e5 !important; transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.3) !important; }
+        
+        .spinner { width: 22px; height: 22px; border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 0.8s linear infinite; display: none; }
+        @keyframes spin { to { transform: rotate(360deg); } }
 
         .btn-bottom { background-color: #ffffff !important; color: #6366f1 !important; font-weight: 800 !important; padding: 18px 32px !important; border-radius: 20px !important; border: 2px solid #6366f1 !important; text-transform: uppercase !important; cursor: pointer; transition: all 0.2s ease; }
 
@@ -163,7 +166,10 @@
                     </div>
                 </div>
             </div>
-            <button onclick="launchCheck()" class="btn-giant">Check My Retirement</button>
+            <button id="mainBtn" onclick="launchCheck()" class="btn-giant">
+                <div id="btnSpinner" class="spinner"></div>
+                <span id="btnText">Check My Retirement</span>
+            </button>
         </section>
 
         <div id="hiddenStats" class="hidden mt-16 space-y-12 fade-in bg-[#fcfdfe] p-4 rounded-3xl">
@@ -288,24 +294,62 @@
         });
 
         function launchCheck() {
-            // Confetti animation
-            confetti({ 
-                particleCount: 150, 
-                spread: 70, 
-                origin: { y: 0.6 }, 
-                colors: ['#6366f1', '#10b981', '#f59e0b'] 
-            });
+            const btn = document.getElementById('mainBtn');
+            const btnText = document.getElementById('btnText');
+            const btnSpinner = document.getElementById('btnSpinner');
+            const resultsArea = document.getElementById('hiddenStats');
             
-            // Run the calculation
-            checkRetirement();
+            // Disable button and show spinner
+            btn.disabled = true;
+            btnSpinner.style.display = 'block';
             
-            // Scroll to results after a short delay
-            setTimeout(function() {
-                document.getElementById('hiddenStats').scrollIntoView({ 
-                    behavior: 'smooth', 
-                    block: 'start' 
+            const loadingSteps = [
+                "Analyzing your financial situation...",
+                "Calculating real return rates...",
+                "Simulating year-by-year projections...",
+                "Applying annuity formula...",
+                "Finalizing your retirement outlook..."
+            ];
+            
+            let step = 0;
+            const interval = setInterval(function() {
+                if (step < loadingSteps.length) {
+                    btnText.innerText = loadingSteps[step];
+                    step++;
+                } else {
+                    clearInterval(interval);
+                    finishLoading();
+                }
+            }, 700);
+            
+            function finishLoading() {
+                // Confetti animation
+                confetti({ 
+                    particleCount: 150, 
+                    spread: 70, 
+                    origin: { y: 0.6 }, 
+                    colors: ['#6366f1', '#10b981', '#f59e0b'] 
                 });
-            }, 300);
+                
+                // Reset button
+                btn.disabled = false;
+                btnSpinner.style.display = 'none';
+                btnText.innerText = 'Check My Retirement';
+                
+                // Run the calculation
+                checkRetirement();
+                
+                // Show results
+                resultsArea.classList.remove('hidden');
+                
+                // Scroll to results after a short delay
+                setTimeout(function() {
+                    resultsArea.scrollIntoView({ 
+                        behavior: 'smooth', 
+                        block: 'start' 
+                    });
+                }, 300);
+            }
         }
 
         window.onload = function() {
