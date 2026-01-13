@@ -183,6 +183,38 @@
                     RE-CHECK
                 </button>
             </div>
+            
+            <!-- Formula Explanation Card -->
+            <div class="bg-slate-50 rounded-3xl p-8 border border-slate-200 mt-8">
+                <div class="flex items-start gap-4">
+                    <div class="text-3xl">📐</div>
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-3">The Math Behind This Calculator</h3>
+                        <p class="text-slate-600 mb-4">
+                            This calculator uses the <strong>Present Value of Annuity</strong> formula, a proven financial equation:
+                        </p>
+                        <div class="bg-white rounded-xl p-4 border border-slate-200 mb-4 font-mono text-center text-slate-800">
+                            n = ln(PMT / (PMT - PV × r)) / ln(1 + r)
+                        </div>
+                        <p class="text-slate-600 text-sm mb-4">
+                            Where: <strong>n</strong> = years until depletion, <strong>PV</strong> = current savings, 
+                            <strong>PMT</strong> = annual net withdrawal (expenses - income), <strong>r</strong> = real return rate (adjusted for inflation)
+                        </p>
+                        <div class="flex flex-wrap gap-2 mb-4">
+                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">Vanguard</span>
+                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">Fidelity</span>
+                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">Schwab</span>
+                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">CFP Board</span>
+                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">CFA Institute</span>
+                            <span class="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-xs font-semibold">Excel NPER()</span>
+                        </div>
+                        <p class="text-slate-500 text-xs">
+                            This is the same formula used by major financial institutions, certified financial planners, 
+                            and built into Excel's NPER function. The real return rate is calculated using the Fisher equation.
+                        </p>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <!-- Footer -->
