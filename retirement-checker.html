@@ -117,10 +117,13 @@
                     <div><label class="label-style text-slate-300">Current Savings ($)</label><input type="number" id="currentSavings" class="input-box" value="500000"></div>
                 </div>
                 <div class="space-y-8">
-                    <h3 class="label-style">Your Spending</h3>
+                    <h3 class="label-style">Your Cash Flow</h3>
                     <div><label class="label-style text-slate-300">Annual Expenses ($)</label><input type="number" id="annualExpenses" class="input-box" value="40000"></div>
-                    <div><label class="label-style text-slate-300">Investment Return (%)</label><input type="number" id="returnRate" class="input-box" value="5"></div>
-                    <div><label class="label-style text-slate-300">Inflation (%)</label><input type="number" id="inflationRate" class="input-box" value="3"></div>
+                    <div><label class="label-style text-slate-300">Annual Income ($)</label><input type="number" id="annualIncome" class="input-box" value="20000" placeholder="Pension, Social Security, etc."></div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div><label class="label-style text-slate-300">Investment Return (%)</label><input type="number" id="returnRate" class="input-box" value="5"></div>
+                        <div><label class="label-style text-slate-300">Inflation (%)</label><input type="number" id="inflationRate" class="input-box" value="3"></div>
+                    </div>
                 </div>
             </div>
             <button onclick="checkRetirement()" class="btn-giant">Check My Retirement</button>
@@ -157,10 +160,10 @@
                     <table class="results-table">
                         <thead class="bg-slate-50">
                             <tr>
-                                <th class="label-style text-slate-400">Year (Age)</th>
-                                <th class="label-style text-slate-400 text-center">Withdrawal</th>
+                                <th class="label-style text-slate-400">Age</th>
+                                <th class="label-style text-slate-400 text-center">Net Cash Flow</th>
                                 <th class="label-style text-slate-400 text-center">Investment Return</th>
-                                <th class="label-style text-slate-400 text-right">Remaining Balance</th>
+                                <th class="label-style text-slate-400 text-right">Balance</th>
                             </tr>
                         </thead>
                         <tbody id="tableBody"></tbody>
@@ -281,11 +284,13 @@
             const lifeExpectancy = parseInt(document.getElementById('lifeExpectancy').value);
             const currentSavings = parseFloat(document.getElementById('currentSavings').value);
             const annualExpenses = parseFloat(document.getElementById('annualExpenses').value);
+            const annualIncome = parseFloat(document.getElementById('annualIncome').value) || 0;
             const returnRate = parseFloat(document.getElementById('returnRate').value) / 100;
             const inflationRate = parseFloat(document.getElementById('inflationRate').value) / 100;
             
             const realReturnRate = ((1 + returnRate) / (1 + inflationRate)) - 1;
             const yearsNeeded = lifeExpectancy - currentAge;
+            const netAnnualExpenses = annualExpenses - annualIncome; // Net withdrawal needed
             
             let balance = currentSavings;
             let age = currentAge;
@@ -302,6 +307,9 @@
             for (let year = 1; year <= yearsNeeded + 5; year++) {
                 age = currentAge + year;
                 
+                // Add income
+                balance += annualIncome;
+                
                 // Withdraw expenses
                 balance -= annualExpenses;
                 
@@ -313,12 +321,14 @@
                 data.push(Math.max(0, balance));
                 
                 const statusEmoji = balance > 0 ? '✓' : '⚠️';
-                const statusColor = balance > 0 ? 'text-emerald-500' : 'text-red-500';
+                const netCashFlow = annualIncome - annualExpenses;
+                const cashFlowColor = netCashFlow >= 0 ? 'text-emerald-500' : 'text-red-400';
+                const cashFlowText = netCashFlow >= 0 ? `+${fmt.format(netCashFlow)}` : `${fmt.format(netCashFlow)}`;
                 
                 tableHTML += `<tr>
                     <td class="font-bold text-slate-900">${age}</td>
-                    <td class="text-center text-red-400 font-bold">-${fmt.format(annualExpenses)}</td>
-                    <td class="text-center text-emerald-500 font-medium">+${fmt.format(Math.max(0, yearReturn))}</td>
+                    <td class="text-center ${cashFlowColor} font-bold">${cashFlowText}</td>
+                    <td class="text-center text-indigo-500 font-medium">+${fmt.format(Math.max(0, yearReturn))}</td>
                     <td class="text-right font-black ${balance > 0 ? 'text-slate-900' : 'text-red-500'}">${statusEmoji} ${fmt.format(Math.max(0, balance))}</td>
                 </tr>`;
                 
@@ -334,24 +344,25 @@
             
             // Determine status
             let status, statusClass, summaryClass, summaryText;
+            const incomeInfo = annualIncome > 0 ? ` (including <span class="highlight">${fmt.format(annualIncome)}/year</span> in income)` : '';
             
             if (moneyLastsYears >= yearsNeeded) {
                 status = "SAFE ✓";
                 statusClass = "bg-emerald-500";
                 summaryClass = "success";
-                summaryText = `<span class="highlight-green">Good news!</span> Your money will last <span class="highlight-green">${moneyLastsYears} years</span> (until age <span class="highlight-green">${finalAge}</span>). ` +
+                summaryText = `<span class="highlight-green">Good news!</span> Your money will last <span class="highlight-green">${moneyLastsYears} years</span> (until age <span class="highlight-green">${finalAge}</span>)${incomeInfo}. ` +
                              `That's <span class="highlight-green">${moneyLastsYears - yearsNeeded} years more</span> than your life expectancy. You're in great shape! 🎉`;
             } else if (moneyLastsYears >= yearsNeeded * 0.8) {
                 status = "TIGHT";
                 statusClass = "bg-orange-500";
                 summaryClass = "warning";
-                summaryText = `<span class="highlight-orange">Close call.</span> Your money will last <span class="highlight-orange">${moneyLastsYears} years</span> (until age <span class="highlight-orange">${finalAge}</span>). ` +
-                             `You're <span class="highlight-orange">${yearsNeeded - moneyLastsYears} years short</span> of your life expectancy. Consider reducing expenses or working part-time. ⚠️`;
+                summaryText = `<span class="highlight-orange">Close call.</span> Your money will last <span class="highlight-orange">${moneyLastsYears} years</span> (until age <span class="highlight-orange">${finalAge}</span>)${incomeInfo}. ` +
+                             `You're <span class="highlight-orange">${yearsNeeded - moneyLastsYears} years short</span> of your life expectancy. Consider reducing expenses${annualIncome > 0 ? ' or increasing income' : ' or finding income sources'}. ⚠️`;
             } else {
                 status = "AT RISK";
                 statusClass = "bg-red-500";
                 summaryClass = "danger";
-                summaryText = `<span class="highlight-red">Warning!</span> Your money will only last <span class="highlight-red">${moneyLastsYears} years</span> (until age <span class="highlight-red">${finalAge}</span>). ` +
+                summaryText = `<span class="highlight-red">Warning!</span> Your money will only last <span class="highlight-red">${moneyLastsYears} years</span> (until age <span class="highlight-red">${finalAge}</span>)${incomeInfo}. ` +
                              `You're <span class="highlight-red">${yearsNeeded - moneyLastsYears} years short</span> of your life expectancy. You need to make changes now. 🚨`;
             }
             
