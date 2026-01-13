@@ -11,7 +11,14 @@
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', 'G-PRYY0KZ7HK');
+        gtag('config', 'G-PRYY0KZ7HK', {
+            'send_page_view': true,
+            'allow_enhanced_conversions': false,
+            'allow_google_signals': false
+        });
+        
+        // Désactiver les événements automatiques non désirés
+        gtag('set', 'allow_ad_personalization_signals', false);
     </script>
     
     <script src="https://cdn.tailwindcss.com"></script>
