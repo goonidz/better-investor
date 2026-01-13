@@ -155,10 +155,11 @@
                     <h3 class="label-style">Step 2: Your Cash Flow</h3>
                     <div><label class="label-style text-slate-300">Annual Income ($)</label><input type="number" id="annualIncome" class="input-box" value="20000" placeholder="Pension, Social Security, etc."></div>
                     <div><label class="label-style text-slate-300">Annual Expenses ($)</label><input type="number" id="annualExpenses" class="input-box" value="40000"></div>
-                    <div class="bg-slate-50 rounded-2xl p-6 border border-slate-200">
-                        <p class="label-style text-slate-400 mb-2">Net Annual Withdrawal</p>
-                        <p class="text-3xl font-black text-slate-900" id="netWithdrawal">$20,000</p>
-                        <p class="text-sm text-slate-500 mt-1">Expenses - Income</p>
+                    <div><label class="label-style text-slate-300">Annual Addition to Savings ($)</label><input type="number" id="annualAddition" class="input-box" value="0" placeholder="Extra savings per year"></div>
+                    <div class="bg-slate-50 rounded-2xl p-5 border border-slate-200">
+                        <p class="label-style text-slate-400 mb-1">Net Annual Withdrawal</p>
+                        <p class="text-2xl font-black text-slate-900" id="netWithdrawal">$20,000</p>
+                        <p class="text-xs text-slate-500 mt-1">Expenses - Income - Addition</p>
                     </div>
                 </div>
             </div>
@@ -262,18 +263,19 @@
         function updateNetWithdrawal() {
             const income = parseFloat(document.getElementById('annualIncome').value) || 0;
             const expenses = parseFloat(document.getElementById('annualExpenses').value) || 0;
-            const net = expenses - income;
+            const addition = parseFloat(document.getElementById('annualAddition').value) || 0;
+            const net = expenses - income - addition;
             const netEl = document.getElementById('netWithdrawal');
             
             if (net > 0) {
                 netEl.innerText = fmt.format(net);
-                netEl.className = 'text-3xl font-black text-red-500';
+                netEl.className = 'text-2xl font-black text-red-500';
             } else if (net < 0) {
                 netEl.innerText = '+' + fmt.format(Math.abs(net));
-                netEl.className = 'text-3xl font-black text-emerald-500';
+                netEl.className = 'text-2xl font-black text-emerald-500';
             } else {
                 netEl.innerText = fmt.format(0);
-                netEl.className = 'text-3xl font-black text-slate-400';
+                netEl.className = 'text-2xl font-black text-slate-400';
             }
         }
         
@@ -281,6 +283,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('annualIncome').addEventListener('input', updateNetWithdrawal);
             document.getElementById('annualExpenses').addEventListener('input', updateNetWithdrawal);
+            document.getElementById('annualAddition').addEventListener('input', updateNetWithdrawal);
             updateNetWithdrawal();
         });
 
@@ -369,13 +372,14 @@
             const currentSavings = parseFloat(document.getElementById('currentSavings').value);
             const annualExpenses = parseFloat(document.getElementById('annualExpenses').value);
             const annualIncome = parseFloat(document.getElementById('annualIncome').value) || 0;
+            const annualAddition = parseFloat(document.getElementById('annualAddition').value) || 0;
             const returnRate = parseFloat(document.getElementById('returnRate').value) / 100;
             const inflationRate = parseFloat(document.getElementById('inflationRate').value) / 100;
             
             // Real return rate (adjusted for inflation)
             const realReturnRate = ((1 + returnRate) / (1 + inflationRate)) - 1;
             const yearsNeeded = lifeExpectancy - currentAge;
-            const netWithdrawal = annualExpenses - annualIncome; // Net amount needed from savings
+            const netWithdrawal = annualExpenses - annualIncome - annualAddition; // Net amount needed from savings
             
             /*
              * EXACT FORMULA: Present Value of Annuity
