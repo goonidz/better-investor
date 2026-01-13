@@ -321,9 +321,10 @@
             const returnRate = parseFloat(document.getElementById('returnRate').value) / 100;
             const inflationRate = parseFloat(document.getElementById('inflationRate').value) / 100;
             
+            // Real return rate (adjusted for inflation)
             const realReturnRate = ((1 + returnRate) / (1 + inflationRate)) - 1;
             const yearsNeeded = lifeExpectancy - currentAge;
-            const netAnnualExpenses = annualExpenses - annualIncome; // Net withdrawal needed
+            const netWithdrawal = annualExpenses - annualIncome; // Net amount needed from savings
             
             let balance = currentSavings;
             let age = currentAge;
@@ -333,26 +334,35 @@
             let moneyLastsYears = 0;
             let finalAge = currentAge;
             
-            // Add starting point
+            // Add starting point (Year 0 = Current situation)
             labels.push(age);
             data.push(balance);
             
-            for (let year = 1; year <= yearsNeeded + 5; year++) {
+            /*
+             * CALCULATION LOGIC (per year):
+             * 1. Start with beginning-of-year balance
+             * 2. Apply investment return on full balance (return earned during the year)
+             * 3. Withdraw net expenses at end of year (expenses - income)
+             * 
+             * This assumes: investments grow, then you withdraw what you need
+             * All values are in REAL terms (inflation-adjusted)
+             */
+            
+            for (let year = 1; year <= yearsNeeded + 10; year++) {
                 age = currentAge + year;
                 
-                // Add income
-                balance += annualIncome;
-                
-                // Withdraw expenses
-                balance -= annualExpenses;
-                
-                // Apply investment return
+                // Step 1: Apply investment return on beginning-of-year balance
                 const yearReturn = balance * realReturnRate;
                 balance += yearReturn;
                 
+                // Step 2: Withdraw net expenses (expenses - income)
+                balance -= netWithdrawal;
+                
+                // Store data
                 labels.push(age);
                 data.push(Math.max(0, balance));
                 
+                // Format for table
                 const statusEmoji = balance > 0 ? '✓' : '⚠️';
                 const netCashFlow = annualIncome - annualExpenses;
                 const cashFlowColor = netCashFlow >= 0 ? 'text-emerald-500' : 'text-red-400';
@@ -377,14 +387,23 @@
             
             // Determine status
             let status, statusClass, summaryClass, summaryText;
-            const incomeInfo = annualIncome > 0 ? ` (including <span class="highlight">${fmt.format(annualIncome)}/year</span> in income)` : '';
+            const incomeInfo = annualIncome > 0 ? ` (with <span class="highlight">${fmt.format(annualIncome)}/year</span> in income)` : '';
             
-            if (moneyLastsYears >= yearsNeeded) {
+            // Special case: Income covers all expenses (money grows forever)
+            if (netWithdrawal <= 0) {
+                status = "GROWING! ✓";
+                statusClass = "bg-emerald-500";
+                summaryClass = "success";
+                summaryText = `<span class="highlight-green">Amazing!</span> Your income (${fmt.format(annualIncome)}/year) covers all your expenses (${fmt.format(annualExpenses)}/year). ` +
+                             `Your savings will actually <span class="highlight-green">GROW</span> over time! You're financially free. 🎉🎉`;
+            } else if (moneyLastsYears >= yearsNeeded) {
                 status = "SAFE ✓";
                 statusClass = "bg-emerald-500";
                 summaryClass = "success";
+                const extraYears = moneyLastsYears - yearsNeeded;
                 summaryText = `<span class="highlight-green">Good news!</span> Your money will last <span class="highlight-green">${moneyLastsYears} years</span> (until age <span class="highlight-green">${finalAge}</span>)${incomeInfo}. ` +
-                             `That's <span class="highlight-green">${moneyLastsYears - yearsNeeded} years more</span> than your life expectancy. You're in great shape! 🎉`;
+                             (extraYears > 0 ? `That's <span class="highlight-green">${extraYears} extra years</span> beyond your life expectancy. ` : '') +
+                             `You're in great shape! 🎉`;
             } else if (moneyLastsYears >= yearsNeeded * 0.8) {
                 status = "TIGHT";
                 statusClass = "bg-orange-500";
