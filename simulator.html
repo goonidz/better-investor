@@ -141,16 +141,34 @@
                     <div><label class="label-style text-slate-300">Initial Capital ($)</label><input type="number" id="initialCapital" class="input-box" value="50000"></div>
                     <div><label class="label-style text-slate-300">Annual Addition ($)</label><input type="number" id="annualAddition" class="input-box" value="15000"></div>
                     
-                    <!-- Tax Options -->
-                    <div class="mt-6 p-4 bg-slate-50 rounded-2xl">
-                        <label class="label-style text-slate-400 mb-3">Account Type (Tax Impact)</label>
-                        <select id="accountType" class="input-box" onchange="updateTaxInfo()">
-                            <option value="tfsa">TFSA (0% tax - Tax-Free)</option>
-                            <option value="rrsp">RRSP (~25% tax on withdrawal)</option>
-                            <option value="fhsa">FHSA (Tax-free if used for home)</option>
-                            <option value="taxable">Taxable Account (~25% on gains)</option>
-                        </select>
-                        <p id="taxInfo" class="text-xs text-slate-400 mt-2 font-medium">✓ No tax on investment returns or withdrawals</p>
+                    <!-- Multi-Account Tax Options -->
+                    <div class="mt-6 p-5 bg-slate-50 rounded-2xl">
+                        <label class="label-style text-slate-400 mb-4 block">Account Allocation (% of portfolio)</label>
+                        
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 text-xs font-bold text-emerald-600">TFSA (0%)</div>
+                                <input type="number" id="allocTfsa" class="input-box flex-1 !py-2 !text-sm" value="50" min="0" max="100" onchange="validateAllocation()">
+                                <span class="text-xs text-slate-400">%</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 text-xs font-bold text-blue-600">RRSP (25%)</div>
+                                <input type="number" id="allocRrsp" class="input-box flex-1 !py-2 !text-sm" value="30" min="0" max="100" onchange="validateAllocation()">
+                                <span class="text-xs text-slate-400">%</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 text-xs font-bold text-purple-600">FHSA (0%)</div>
+                                <input type="number" id="allocFhsa" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
+                                <span class="text-xs text-slate-400">%</span>
+                            </div>
+                            <div class="flex items-center gap-3">
+                                <div class="w-24 text-xs font-bold text-orange-600">Taxable (12.5%)</div>
+                                <input type="number" id="allocTaxable" class="input-box flex-1 !py-2 !text-sm" value="20" min="0" max="100" onchange="validateAllocation()">
+                                <span class="text-xs text-slate-400">%</span>
+                            </div>
+                        </div>
+                        
+                        <p id="allocStatus" class="text-xs text-emerald-600 mt-3 font-bold">✓ Total: 100%</p>
                     </div>
                 </div>
             </div>
@@ -262,16 +280,48 @@
             taxable: 0.125  // Taxable account - 50% of gains taxed at 25% = 12.5% effective
         };
         
-        const taxInfo = {
-            tfsa: '✓ No tax on investment returns or withdrawals',
-            rrsp: '⚠️ Tax deferred now, ~25% tax when you withdraw in retirement',
-            fhsa: '✓ Tax-free if used for first home purchase, otherwise taxed like RRSP',
-            taxable: '⚠️ ~50% of capital gains taxable (effective ~12.5% tax on total gains)'
-        };
+        function validateAllocation() {
+            const tfsa = parseFloat(document.getElementById('allocTfsa').value) || 0;
+            const rrsp = parseFloat(document.getElementById('allocRrsp').value) || 0;
+            const fhsa = parseFloat(document.getElementById('allocFhsa').value) || 0;
+            const taxable = parseFloat(document.getElementById('allocTaxable').value) || 0;
+            const total = tfsa + rrsp + fhsa + taxable;
+            
+            const statusEl = document.getElementById('allocStatus');
+            if (total === 100) {
+                statusEl.className = 'text-xs text-emerald-600 mt-3 font-bold';
+                statusEl.innerText = '✓ Total: 100%';
+            } else if (total < 100) {
+                statusEl.className = 'text-xs text-amber-600 mt-3 font-bold';
+                statusEl.innerText = `⚠️ Total: ${total}% (${100 - total}% unallocated)`;
+            } else {
+                statusEl.className = 'text-xs text-red-600 mt-3 font-bold';
+                statusEl.innerText = `❌ Total: ${total}% (exceeds 100%)`;
+            }
+        }
         
-        function updateTaxInfo() {
-            const accountType = document.getElementById('accountType').value;
-            document.getElementById('taxInfo').innerText = taxInfo[accountType];
+        function getAllocations() {
+            let tfsa = parseFloat(document.getElementById('allocTfsa').value) || 0;
+            let rrsp = parseFloat(document.getElementById('allocRrsp').value) || 0;
+            let fhsa = parseFloat(document.getElementById('allocFhsa').value) || 0;
+            let taxable = parseFloat(document.getElementById('allocTaxable').value) || 0;
+            const total = tfsa + rrsp + fhsa + taxable;
+            
+            // Normalize to 100% if not exactly 100
+            if (total !== 100 && total > 0) {
+                const factor = 100 / total;
+                tfsa *= factor;
+                rrsp *= factor;
+                fhsa *= factor;
+                taxable *= factor;
+            }
+            
+            return {
+                tfsa: tfsa / 100,
+                rrsp: rrsp / 100,
+                fhsa: fhsa / 100,
+                taxable: taxable / 100
+            };
         }
 
         window.onload = function() {
@@ -331,11 +381,16 @@
             const initial = parseFloat(document.getElementById('initialCapital').value);
             const addition = parseFloat(document.getElementById('annualAddition').value);
             const currentYear = new Date().getFullYear();
-            const accountType = document.getElementById('accountType').value;
-            const taxRate = taxRates[accountType];
+            const alloc = getAllocations();
 
-            let currentBal = initial;
-            let currentPrin = initial;
+            // Track each account separately
+            let accounts = {
+                tfsa: { balance: initial * alloc.tfsa, principal: initial * alloc.tfsa },
+                rrsp: { balance: initial * alloc.rrsp, principal: initial * alloc.rrsp },
+                fhsa: { balance: initial * alloc.fhsa, principal: initial * alloc.fhsa },
+                taxable: { balance: initial * alloc.taxable, principal: initial * alloc.taxable }
+            };
+
             let labels = [];
             let dataInit = [];
             let dataDep = [];
@@ -350,18 +405,27 @@
                 
                 let yearlyInterest = 0;
                 let yearlyTax = 0;
-                if (i > 0) {
-                    yearlyInterest = currentBal - ( (currentBal / (1 + rate)) );
-                    
-                    // Apply tax on gains
-                    yearlyTax = yearlyInterest * taxRate;
-                    totalTaxPaid += yearlyTax;
-                    
-                    // For taxable accounts, reduce balance by tax paid annually
-                    if (accountType === 'taxable') {
-                        currentBal -= yearlyTax;
+                let currentBal = 0;
+                let currentPrin = 0;
+                
+                // Calculate for each account
+                for (const [type, acc] of Object.entries(accounts)) {
+                    if (i > 0) {
+                        const accInterest = acc.balance - (acc.balance / (1 + rate));
+                        yearlyInterest += accInterest;
+                        
+                        // Apply tax for taxable accounts (annual)
+                        if (type === 'taxable') {
+                            const accTax = accInterest * taxRates.taxable;
+                            yearlyTax += accTax;
+                            totalTaxPaid += accTax;
+                            acc.balance -= accTax;
+                        }
                     }
+                    currentBal += acc.balance;
+                    currentPrin += acc.principal;
                 }
+                
                 let monthlyInterest = yearlyInterest / 12;
 
                 dataInit.push(initial);
@@ -378,20 +442,31 @@
                 </tr>`;
 
                 if (i < duration) {
-                    currentBal = (currentBal + addition) * (1 + rate);
-                    currentPrin += addition;
+                    // Add annual contribution and grow each account
+                    for (const [type, acc] of Object.entries(accounts)) {
+                        const additionShare = addition * alloc[type];
+                        acc.balance = (acc.balance + additionShare) * (1 + rate);
+                        acc.principal += additionShare;
+                    }
                 }
             }
 
-            // Apply final withdrawal tax for RRSP
-            let finalBalance = currentBal;
-            if (accountType === 'rrsp') {
-                const withdrawalTax = currentBal * taxRate;
-                totalTaxPaid += withdrawalTax;
-                finalBalance = currentBal * (1 - taxRate);
+            // Calculate final totals
+            let totalBal = 0;
+            let totalPrin = 0;
+            for (const acc of Object.values(accounts)) {
+                totalBal += acc.balance;
+                totalPrin += acc.principal;
             }
 
-            const totalInterest = currentBal - currentPrin;
+            // Apply RRSP withdrawal tax at end
+            const rrspWithdrawalTax = accounts.rrsp.balance * taxRates.rrsp;
+            totalTaxPaid += rrspWithdrawalTax;
+            let finalBalance = totalBal - rrspWithdrawalTax;
+
+            const totalInterest = totalBal - totalPrin;
+            const currentBal = totalBal;
+            const currentPrin = totalPrin;
             const annualInc = finalBalance * 0.04;
             const monthlyInc = annualInc / 12;
             const interestPct = Math.round((totalInterest / currentBal) * 100);
@@ -406,10 +481,8 @@
             // Build summary with tax info
             let summaryHTML = `In <span class="highlight">${duration} years</span>, you <span class="highlight">will reach</span> a total of <span class="highlight">${fmt.format(currentBal)}</span>`;
             
-            if (accountType === 'rrsp') {
-                summaryHTML += ` (${fmt.format(finalBalance)} after ${fmt.format(totalTaxPaid)} withdrawal tax)`;
-            } else if (totalTaxPaid > 0) {
-                summaryHTML += ` (${fmt.format(totalTaxPaid)} paid in taxes)`;
+            if (totalTaxPaid > 0) {
+                summaryHTML += ` → <span class="highlight">${fmt.format(finalBalance)}</span> after <span class="text-red-500">${fmt.format(totalTaxPaid)} taxes</span>`;
             }
             
             summaryHTML += `. This portfolio <span class="highlight">will generate</span> a passive income of <span class="highlight">${fmt.format(monthlyInc)}/mo</span>. `;
