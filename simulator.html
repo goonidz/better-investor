@@ -140,118 +140,9 @@
                     <h3 class="label-style">Step 2: Strategy</h3>
                     <div><label class="label-style text-slate-300">Initial Capital ($)</label><input type="number" id="initialCapital" class="input-box" value="50000"></div>
                     <div><label class="label-style text-slate-300">Annual Addition ($)</label><input type="number" id="annualAddition" class="input-box" value="15000"></div>
-                    
-                    <!-- Collapsible Tax Options -->
-                    <details class="mt-4">
-                        <summary class="cursor-pointer text-xs font-bold text-slate-400 hover:text-indigo-500 transition-colors py-2">
-                            ⚙️ Advanced: Tax by Account Type <span class="text-slate-300">(optional)</span>
-                        </summary>
-                        
-                        <div class="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                            <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 mb-4">
-                                <p class="text-sm text-amber-800 font-semibold">💡 This is optional! I recommend running your first simulation without this complexity. You can always come back and run as many simulations as you want.</p>
-                            </div>
-                            
-                            <div class="mb-3">
-                                <label class="label-style text-slate-400 mb-2 block">Country</label>
-                                <select id="taxCountry" class="input-box !py-2 !text-sm" onchange="updateCountryAccounts()">
-                                    <option value="us">🇺🇸 United States</option>
-                                    <option value="ca">🇨🇦 Canada</option>
-                                    <option value="other">🌍 Other / No tax</option>
-                                </select>
-                            </div>
-                            
-                            <!-- US Accounts (default - shown first) -->
-                            <div id="accountsUs" class="space-y-3">
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-32 text-xs font-bold text-emerald-600">Roth IRA (0%)</div>
-                                        <input type="number" id="allocRoth" class="input-box flex-1 !py-2 !text-sm" value="100" min="0" max="100" onchange="validateAllocation()">
-                                        <span class="text-xs text-slate-400 w-4">%</span>
-                                    </div>
-                                    <p class="text-[10px] text-slate-400 mt-1 ml-1">Tax-free growth & withdrawals. Best for long-term.</p>
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-32 text-xs font-bold text-blue-600">401(k) (~22%)</div>
-                                        <input type="number" id="alloc401k" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
-                                        <span class="text-xs text-slate-400 w-4">%</span>
-                                    </div>
-                                    <p class="text-[10px] text-slate-400 mt-1 ml-1">Employer-sponsored. Tax-deferred, taxed on withdrawal.</p>
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-32 text-xs font-bold text-purple-600">Trad. IRA (~22%)</div>
-                                        <input type="number" id="allocTradIra" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
-                                        <span class="text-xs text-slate-400 w-4">%</span>
-                                    </div>
-                                    <p class="text-[10px] text-slate-400 mt-1 ml-1">Tax-deductible contributions, taxed on withdrawal.</p>
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-32 text-xs font-bold text-orange-600">Brokerage (~15%)</div>
-                                        <input type="number" id="allocBrokerage" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
-                                        <span class="text-xs text-slate-400 w-4">%</span>
-                                    </div>
-                                    <p class="text-[10px] text-slate-400 mt-1 ml-1">Regular taxable account. Capital gains taxed annually.</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Canada Accounts (hidden by default) -->
-                            <div id="accountsCa" class="space-y-3 hidden">
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-32 text-xs font-bold text-emerald-600">TFSA (0%)</div>
-                                        <input type="number" id="allocTfsa" class="input-box flex-1 !py-2 !text-sm" value="100" min="0" max="100" onchange="validateAllocation()">
-                                        <span class="text-xs text-slate-400 w-4">%</span>
-                                    </div>
-                                    <p class="text-[10px] text-slate-400 mt-1 ml-1">Tax-Free Savings Account. No tax on growth or withdrawals.</p>
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-32 text-xs font-bold text-blue-600">RRSP (~22%)</div>
-                                        <input type="number" id="allocRrsp" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
-                                        <span class="text-xs text-slate-400 w-4">%</span>
-                                    </div>
-                                    <p class="text-[10px] text-slate-400 mt-1 ml-1">Registered Retirement Savings Plan. Tax-deferred, taxed on withdrawal.</p>
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-32 text-xs font-bold text-purple-600">FHSA (0%)</div>
-                                        <input type="number" id="allocFhsa" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
-                                        <span class="text-xs text-slate-400 w-4">%</span>
-                                    </div>
-                                    <p class="text-[10px] text-slate-400 mt-1 ml-1">First Home Savings Account. Tax-free if used for first home purchase.</p>
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-2">
-                                        <div class="w-32 text-xs font-bold text-orange-600">Non-Registered (~12%)</div>
-                                        <input type="number" id="allocTaxable" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
-                                        <span class="text-xs text-slate-400 w-4">%</span>
-                                    </div>
-                                    <p class="text-[10px] text-slate-400 mt-1 ml-1">Regular taxable account. 50% of capital gains are taxable.</p>
-                                </div>
-                            </div>
-                            
-                            <!-- Other / No tax -->
-                            <div id="accountsOther" class="hidden">
-                                <p class="text-xs text-emerald-600 font-bold py-2">✓ 100% tax-free growth assumed</p>
-                            </div>
-                            
-                            <p id="allocStatus" class="text-xs text-emerald-600 mt-3 font-bold">✓ Total: 100%</p>
-                            
-                            <!-- Tax Calculation Explanation -->
-                            <div class="mt-4 pt-3 border-t border-slate-200">
-                                <p class="text-[10px] text-slate-500 font-semibold mb-2">📊 How taxes are calculated (on 4% annual withdrawals):</p>
-                                <ul class="text-[10px] text-slate-400 space-y-1 list-disc list-inside">
-                                    <li><span class="text-emerald-600 font-bold">Roth IRA / TFSA / FHSA</span> — Withdraw tax-free</li>
-                                    <li><span class="text-blue-600 font-bold">401(k) / IRA / RRSP</span> — ~22% tax on each withdrawal (entire amount is taxable income)</li>
-                                    <li><span class="text-orange-600 font-bold">Brokerage / Non-Reg</span> — ~15% tax on gains portion only (~50% of withdrawal)</li>
-                                </ul>
-                                <p class="text-[10px] text-slate-400 mt-2 italic">💡 Your portfolio balance stays intact. Taxes are calculated on your annual 4% withdrawals, not the total balance.</p>
-                            </div>
-                        </div>
-                    </details>
+                    <div><label class="label-style text-slate-300">Annual Fees (%)</label><input type="number" id="annualFees" class="input-box" value="0.5" step="0.1" min="0" max="5">
+                        <p class="text-[10px] text-slate-400 mt-1">Management fees, expense ratios, etc. (typical: 0.03% - 1%)</p>
+                    </div>
                 </div>
             </div>
             <button onclick="ignite()" class="btn-giant">Generate My Retirement Path</button>
@@ -280,11 +171,11 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="bg-emerald-500 p-12 rounded-[3rem] text-white text-center shadow-xl shadow-emerald-100">
-                    <p class="label-style text-white/70">Monthly Income (After Tax)</p>
+                    <p class="label-style text-white/70">Monthly Freedom Income</p>
                     <h3 class="text-5xl font-black mt-2" id="resMonthly">$0</h3>
                 </div>
                 <div class="bg-slate-900 p-12 rounded-[3rem] text-white text-center">
-                    <p class="label-style text-white/40">Yearly Income (After Tax)</p>
+                    <p class="label-style text-white/40">Yearly Passive Cashflow</p>
                     <h3 class="text-5xl font-black mt-2" id="resYearly">$0</h3>
                 </div>
             </div>
@@ -353,105 +244,6 @@
     <script>
         let myChart;
         const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
-        
-        // Tax rates by account type (withdrawal tax rate)
-        const taxRates = {
-            // Canada
-            tfsa: 0,        // Tax-Free Savings Account
-            rrsp: 0.22,     // RRSP - taxed on withdrawal (avg 22%)
-            fhsa: 0,        // FHSA - tax-free if used for home
-            taxable: 0.12,  // Non-registered - 50% of gains taxed at ~24% = 12% effective
-            // US
-            roth: 0,        // Roth IRA - tax-free
-            k401: 0.22,     // 401(k) - taxed on withdrawal (avg 22%)
-            tradIra: 0.22,  // Traditional IRA - taxed on withdrawal
-            brokerage: 0.15 // Brokerage - capital gains tax (~15%)
-        };
-        
-        function updateCountryAccounts() {
-            const country = document.getElementById('taxCountry').value;
-            document.getElementById('accountsUs').classList.toggle('hidden', country !== 'us');
-            document.getElementById('accountsCa').classList.toggle('hidden', country !== 'ca');
-            document.getElementById('accountsOther').classList.toggle('hidden', country !== 'other');
-            document.getElementById('allocStatus').classList.toggle('hidden', country === 'other');
-            validateAllocation();
-        }
-        
-        function validateAllocation() {
-            const country = document.getElementById('taxCountry').value;
-            if (country === 'other') return;
-            
-            let total = 0;
-            if (country === 'us') {
-                total = (parseFloat(document.getElementById('allocRoth').value) || 0) +
-                        (parseFloat(document.getElementById('alloc401k').value) || 0) +
-                        (parseFloat(document.getElementById('allocTradIra').value) || 0) +
-                        (parseFloat(document.getElementById('allocBrokerage').value) || 0);
-            } else if (country === 'ca') {
-                total = (parseFloat(document.getElementById('allocTfsa').value) || 0) +
-                        (parseFloat(document.getElementById('allocRrsp').value) || 0) +
-                        (parseFloat(document.getElementById('allocFhsa').value) || 0) +
-                        (parseFloat(document.getElementById('allocTaxable').value) || 0);
-            }
-            
-            const statusEl = document.getElementById('allocStatus');
-            if (total === 100) {
-                statusEl.className = 'text-xs text-emerald-600 mt-3 font-bold';
-                statusEl.innerText = '✓ Total: 100%';
-            } else if (total < 100) {
-                statusEl.className = 'text-xs text-amber-600 mt-3 font-bold';
-                statusEl.innerText = `⚠️ Total: ${total}% (${100 - total}% unallocated)`;
-            } else {
-                statusEl.className = 'text-xs text-red-600 mt-3 font-bold';
-                statusEl.innerText = `❌ Total: ${total}% (exceeds 100%)`;
-            }
-        }
-        
-        function getAllocations() {
-            const country = document.getElementById('taxCountry').value;
-            
-            // Default: 100% tax-free
-            if (country === 'other') {
-                return { taxFree: 1, deferred: 0, taxable: 0, deferredRate: 0, taxableRate: 0 };
-            }
-            
-            let taxFree = 0, deferred = 0, taxable = 0;
-            let deferredRate = 0.22, taxableRate = 0.15;
-            
-            if (country === 'us') {
-                taxFree = parseFloat(document.getElementById('allocRoth').value) || 0;
-                deferred = (parseFloat(document.getElementById('alloc401k').value) || 0) +
-                           (parseFloat(document.getElementById('allocTradIra').value) || 0);
-                taxable = parseFloat(document.getElementById('allocBrokerage').value) || 0;
-                deferredRate = taxRates.k401;
-                taxableRate = taxRates.brokerage;
-            } else if (country === 'ca') {
-                taxFree = (parseFloat(document.getElementById('allocTfsa').value) || 0) +
-                          (parseFloat(document.getElementById('allocFhsa').value) || 0);
-                deferred = parseFloat(document.getElementById('allocRrsp').value) || 0;
-                taxable = parseFloat(document.getElementById('allocTaxable').value) || 0;
-                deferredRate = taxRates.rrsp;
-                taxableRate = taxRates.taxable;
-            }
-            
-            const total = taxFree + deferred + taxable;
-            
-            // Normalize to 100%
-            if (total > 0 && total !== 100) {
-                const factor = 100 / total;
-                taxFree *= factor;
-                deferred *= factor;
-                taxable *= factor;
-            }
-            
-            return {
-                taxFree: taxFree / 100,
-                deferred: deferred / 100,
-                taxable: taxable / 100,
-                deferredRate,
-                taxableRate
-            };
-        }
 
         window.onload = function() {
             const ctx = document.getElementById('projectionChart').getContext('2d');
@@ -462,12 +254,13 @@
                     datasets: [
                         { label: 'Initial Balance', data: [], backgroundColor: '#f1f5f9', fill: true, pointRadius: 0, stack: '1' },
                         { label: 'Deposits', data: [], backgroundColor: '#cbd5e1', fill: true, pointRadius: 0, stack: '1' },
-                        { label: 'Accrued Interest', data: [], backgroundColor: '#6366f1', fill: true, pointRadius: 0, stack: '1' }
+                        { label: 'Accrued Interest', data: [], backgroundColor: '#6366f1', fill: true, pointRadius: 0, stack: '1' },
+                        { label: 'Fees Paid', data: [], backgroundColor: '#ef4444', fill: true, pointRadius: 0, stack: '1' }
                     ]
                 },
                 options: { 
                     responsive: true, maintainAspectRatio: false, 
-                    plugins: { legend: { display: false } },
+                    plugins: { legend: { display: true, position: 'bottom' } },
                     scales: { 
                         x: { display: true, stacked: true, grid: { display: false } }, 
                         y: { display: true, stacked: true, ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'k' } } 
@@ -509,22 +302,18 @@
             const rate = parseFloat(document.getElementById('returnRate').value) / 100;
             const initial = parseFloat(document.getElementById('initialCapital').value);
             const addition = parseFloat(document.getElementById('annualAddition').value);
+            const fees = parseFloat(document.getElementById('annualFees').value) / 100;
             const currentYear = new Date().getFullYear();
-            const alloc = getAllocations();
 
-            // Track 3 account categories: tax-free, tax-deferred, taxable
-            let accounts = {
-                taxFree: { balance: initial * alloc.taxFree, principal: initial * alloc.taxFree },
-                deferred: { balance: initial * alloc.deferred, principal: initial * alloc.deferred },
-                taxable: { balance: initial * alloc.taxable, principal: initial * alloc.taxable }
-            };
-
+            let currentBal = initial;
+            let currentPrin = initial;
             let labels = [];
             let dataInit = [];
             let dataDep = [];
             let dataInt = [];
+            let dataFees = [];
             let tableHTML = "";
-            let totalTaxPaid = 0;
+            let totalFeesPaid = 0;
 
             for (let i = 0; i <= duration; i++) {
                 const year = currentYear + i;
@@ -532,109 +321,58 @@
                 labels.push(year);
                 
                 let yearlyInterest = 0;
-                let yearlyTax = 0;
-                let currentBal = 0;
-                let currentPrin = 0;
+                let yearlyFees = 0;
                 
-                // Calculate for each account category
-                for (const [type, acc] of Object.entries(accounts)) {
-                    if (i > 0) {
-                        const accInterest = acc.balance - (acc.balance / (1 + rate));
-                        yearlyInterest += accInterest;
-                        
-                        // Apply tax for taxable accounts (annual capital gains)
-                        if (type === 'taxable' && alloc.taxableRate > 0) {
-                            const accTax = accInterest * alloc.taxableRate;
-                            yearlyTax += accTax;
-                            totalTaxPaid += accTax;
-                            acc.balance -= accTax;
-                        }
-                    }
-                    currentBal += acc.balance;
-                    currentPrin += acc.principal;
+                if (i > 0) {
+                    yearlyInterest = currentBal - (currentBal / (1 + rate));
+                    yearlyFees = currentBal * fees;
+                    totalFeesPaid += yearlyFees;
                 }
-                
                 let monthlyInterest = yearlyInterest / 12;
 
                 dataInit.push(initial);
                 dataDep.push(currentPrin - initial);
-                dataInt.push(Math.max(0, currentBal - currentPrin));
+                dataInt.push(Math.max(0, currentBal - currentPrin - totalFeesPaid));
+                dataFees.push(totalFeesPaid);
                 
-                const taxDisplay = yearlyTax > 0 ? ` <span class="text-red-400 text-sm">(-${fmt.format(yearlyTax)} tax)</span>` : '';
+                const feesDisplay = yearlyFees > 0 ? ` <span class="text-red-400 text-sm">(-${fmt.format(yearlyFees)} fees)</span>` : '';
                 
                 tableHTML += `<tr>
                     <td class="font-bold text-slate-900">${year} <span class="text-slate-400 font-medium ml-1">(${age})</span></td>
-                    <td class="text-center text-emerald-500 font-bold">+${fmt.format(yearlyInterest)}${taxDisplay}</td>
+                    <td class="text-center text-emerald-500 font-bold">+${fmt.format(yearlyInterest)}${feesDisplay}</td>
                     <td class="text-center text-indigo-400 font-medium">${fmt.format(monthlyInterest)}/mo</td>
                     <td class="text-right font-black text-slate-900">${fmt.format(currentBal)}</td>
                 </tr>`;
 
                 if (i < duration) {
-                    // Add annual contribution and grow each account
-                    for (const [type, acc] of Object.entries(accounts)) {
-                        const allocKey = type === 'taxFree' ? 'taxFree' : type;
-                        const additionShare = addition * alloc[allocKey];
-                        acc.balance = (acc.balance + additionShare) * (1 + rate);
-                        acc.principal += additionShare;
-                    }
+                    // Grow, add contribution, subtract fees
+                    currentBal = (currentBal + addition) * (1 + rate) * (1 - fees);
+                    currentPrin += addition;
                 }
             }
 
-            // Calculate final totals
-            let totalBal = 0;
-            let totalPrin = 0;
-            for (const acc of Object.values(accounts)) {
-                totalBal += acc.balance;
-                totalPrin += acc.principal;
-            }
-
-            const totalInterest = totalBal - totalPrin;
-            const currentBal = totalBal;
-            const currentPrin = totalPrin;
-            
-            // Calculate annual withdrawal income (4% rule) with taxes on withdrawals
-            const withdrawalRate = 0.04;
-            
-            // Tax-free accounts: withdraw tax-free
-            const taxFreeWithdrawal = accounts.taxFree.balance * withdrawalRate;
-            
-            // Deferred accounts: taxed on withdrawal (whole withdrawal is taxable income)
-            const deferredWithdrawalGross = accounts.deferred.balance * withdrawalRate;
-            const deferredWithdrawalTax = deferredWithdrawalGross * alloc.deferredRate;
-            const deferredWithdrawalNet = deferredWithdrawalGross - deferredWithdrawalTax;
-            
-            // Taxable accounts: only gains portion taxed (simplified: assume 50% is gains)
-            const taxableWithdrawalGross = accounts.taxable.balance * withdrawalRate;
-            const taxableGainsPortion = taxableWithdrawalGross * 0.5; // ~50% of balance is typically gains
-            const taxableWithdrawalTax = taxableGainsPortion * alloc.taxableRate;
-            const taxableWithdrawalNet = taxableWithdrawalGross - taxableWithdrawalTax;
-            
-            // Total annual income after taxes
-            const annualInc = taxFreeWithdrawal + deferredWithdrawalNet + taxableWithdrawalNet;
-            const annualTaxOnWithdrawals = deferredWithdrawalTax + taxableWithdrawalTax;
+            const totalInterest = currentBal - currentPrin;
+            const annualInc = currentBal * 0.04;
             const monthlyInc = annualInc / 12;
-            
-            // Final balance stays the same (we don't subtract all taxes upfront)
-            let finalBalance = totalBal;
             const interestPct = Math.round((totalInterest / currentBal) * 100);
 
-            animateValue("resTotal", 0, finalBalance, 1500);
+            animateValue("resTotal", 0, currentBal, 1500);
             animateValue("resInterest", 0, totalInterest, 1500);
             animateValue("resMonthly", 0, monthlyInc, 1500);
             animateValue("resYearly", 0, annualInc, 1500);
 
             document.getElementById('tableBody').innerHTML = tableHTML;
             
-            // Build summary with tax info
+            // Build summary
             let summaryHTML = `In <span class="highlight">${duration} years</span>, you <span class="highlight">will reach</span> a total of <span class="highlight">${fmt.format(currentBal)}</span>. `;
             
-            summaryHTML += `This portfolio <span class="highlight">will generate</span> a passive income of <span class="highlight">${fmt.format(monthlyInc)}/mo</span> (after taxes)`;
+            summaryHTML += `This portfolio <span class="highlight">will generate</span> a passive income of <span class="highlight">${fmt.format(monthlyInc)}/mo</span>. `;
+            summaryHTML += `The market <span class="highlight">will have gifted</span> you <span class="highlight">${fmt.format(totalInterest)}</span> (${interestPct}% of your wealth)`;
             
-            if (annualTaxOnWithdrawals > 0) {
-                summaryHTML += ` — you'll pay ~<span class="text-red-500">${fmt.format(annualTaxOnWithdrawals)}/year</span> in taxes on your withdrawals`;
+            if (totalFeesPaid > 0) {
+                summaryHTML += `, but you'll have paid <span class="text-red-500">${fmt.format(totalFeesPaid)}</span> in fees over ${duration} years`;
             }
-            
-            summaryHTML += `. The market <span class="highlight">will have gifted</span> you <span class="highlight">${fmt.format(totalInterest)}</span> (${interestPct}% of your wealth).`;
+            summaryHTML += `.`;
             
             document.getElementById('dynamicSummary').innerHTML = summaryHTML;
 
@@ -642,6 +380,7 @@
             myChart.data.datasets[0].data = dataInit;
             myChart.data.datasets[1].data = dataDep;
             myChart.data.datasets[2].data = dataInt;
+            myChart.data.datasets[3].data = dataFees;
             
             myChart.options.interaction = { mode: 'index', intersect: false, axis: 'x' };
             myChart.options.plugins.tooltip = {
@@ -651,7 +390,7 @@
                 callbacks: {
                     title: (tooltipItems) => `Age ${startAge + tooltipItems[0].dataIndex}`,
                     label: (ctx) => ` ${ctx.dataset.label}: ${fmt.format(ctx.raw)}`,
-                    footer: (items) => ' TOTAL: ' + fmt.format(items.reduce((a, b) => a + b.raw, 0))
+                    footer: (items) => ' NET TOTAL: ' + fmt.format(items[0].raw + items[1].raw + items[2].raw)
                 }
             };
             myChart.update();
