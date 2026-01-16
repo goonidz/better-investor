@@ -141,35 +141,80 @@
                     <div><label class="label-style text-slate-300">Initial Capital ($)</label><input type="number" id="initialCapital" class="input-box" value="50000"></div>
                     <div><label class="label-style text-slate-300">Annual Addition ($)</label><input type="number" id="annualAddition" class="input-box" value="15000"></div>
                     
-                    <!-- Multi-Account Tax Options -->
-                    <div class="mt-6 p-5 bg-slate-50 rounded-2xl">
-                        <label class="label-style text-slate-400 mb-4 block">Account Allocation (% of portfolio)</label>
+                    <!-- Collapsible Tax Options -->
+                    <details class="mt-4">
+                        <summary class="cursor-pointer text-xs font-bold text-slate-400 hover:text-indigo-500 transition-colors py-2">
+                            ⚙️ Advanced: Tax by Account Type <span class="text-slate-300">(optional)</span>
+                        </summary>
                         
-                        <div class="space-y-3">
-                            <div class="flex items-center gap-3">
-                                <div class="w-24 text-xs font-bold text-emerald-600">TFSA (0%)</div>
-                                <input type="number" id="allocTfsa" class="input-box flex-1 !py-2 !text-sm" value="50" min="0" max="100" onchange="validateAllocation()">
-                                <span class="text-xs text-slate-400">%</span>
+                        <div class="mt-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                            <p class="text-xs text-slate-400 mb-4">Split your portfolio across different account types. By default, we assume 100% tax-free growth.</p>
+                            
+                            <div class="mb-3">
+                                <label class="label-style text-slate-400 mb-2 block">Country</label>
+                                <select id="taxCountry" class="input-box !py-2 !text-sm" onchange="updateCountryAccounts()">
+                                    <option value="ca">🇨🇦 Canada</option>
+                                    <option value="us">🇺🇸 United States</option>
+                                    <option value="other">🌍 Other / No tax</option>
+                                </select>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-24 text-xs font-bold text-blue-600">RRSP (25%)</div>
-                                <input type="number" id="allocRrsp" class="input-box flex-1 !py-2 !text-sm" value="30" min="0" max="100" onchange="validateAllocation()">
-                                <span class="text-xs text-slate-400">%</span>
+                            
+                            <!-- Canada Accounts -->
+                            <div id="accountsCa" class="space-y-2">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-32 text-xs font-bold text-emerald-600">TFSA (0%)</div>
+                                    <input type="number" id="allocTfsa" class="input-box flex-1 !py-2 !text-sm" value="100" min="0" max="100" onchange="validateAllocation()">
+                                    <span class="text-xs text-slate-400 w-4">%</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-32 text-xs font-bold text-blue-600">RRSP (~22%)</div>
+                                    <input type="number" id="allocRrsp" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
+                                    <span class="text-xs text-slate-400 w-4">%</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-32 text-xs font-bold text-purple-600">FHSA (0%)</div>
+                                    <input type="number" id="allocFhsa" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
+                                    <span class="text-xs text-slate-400 w-4">%</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-32 text-xs font-bold text-orange-600">Non-Registered (~12%)</div>
+                                    <input type="number" id="allocTaxable" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
+                                    <span class="text-xs text-slate-400 w-4">%</span>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-24 text-xs font-bold text-purple-600">FHSA (0%)</div>
-                                <input type="number" id="allocFhsa" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
-                                <span class="text-xs text-slate-400">%</span>
+                            
+                            <!-- US Accounts -->
+                            <div id="accountsUs" class="space-y-2 hidden">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-32 text-xs font-bold text-emerald-600">Roth IRA (0%)</div>
+                                    <input type="number" id="allocRoth" class="input-box flex-1 !py-2 !text-sm" value="100" min="0" max="100" onchange="validateAllocation()">
+                                    <span class="text-xs text-slate-400 w-4">%</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-32 text-xs font-bold text-blue-600">401(k) (~22%)</div>
+                                    <input type="number" id="alloc401k" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
+                                    <span class="text-xs text-slate-400 w-4">%</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-32 text-xs font-bold text-purple-600">Trad. IRA (~22%)</div>
+                                    <input type="number" id="allocTradIra" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
+                                    <span class="text-xs text-slate-400 w-4">%</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-32 text-xs font-bold text-orange-600">Brokerage (~15%)</div>
+                                    <input type="number" id="allocBrokerage" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
+                                    <span class="text-xs text-slate-400 w-4">%</span>
+                                </div>
                             </div>
-                            <div class="flex items-center gap-3">
-                                <div class="w-24 text-xs font-bold text-orange-600">Taxable (12.5%)</div>
-                                <input type="number" id="allocTaxable" class="input-box flex-1 !py-2 !text-sm" value="20" min="0" max="100" onchange="validateAllocation()">
-                                <span class="text-xs text-slate-400">%</span>
+                            
+                            <!-- Other / No tax -->
+                            <div id="accountsOther" class="hidden">
+                                <p class="text-xs text-emerald-600 font-bold py-2">✓ 100% tax-free growth assumed</p>
                             </div>
+                            
+                            <p id="allocStatus" class="text-xs text-emerald-600 mt-3 font-bold">✓ Total: 100%</p>
                         </div>
-                        
-                        <p id="allocStatus" class="text-xs text-emerald-600 mt-3 font-bold">✓ Total: 100%</p>
-                    </div>
+                    </details>
                 </div>
             </div>
             <button onclick="ignite()" class="btn-giant">Generate My Retirement Path</button>
@@ -272,20 +317,45 @@
         let myChart;
         const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
         
-        // Tax rates by account type
+        // Tax rates by account type (withdrawal tax rate)
         const taxRates = {
+            // Canada
             tfsa: 0,        // Tax-Free Savings Account
-            rrsp: 0.25,     // RRSP - taxed on withdrawal (avg 25%)
+            rrsp: 0.22,     // RRSP - taxed on withdrawal (avg 22%)
             fhsa: 0,        // FHSA - tax-free if used for home
-            taxable: 0.125  // Taxable account - 50% of gains taxed at 25% = 12.5% effective
+            taxable: 0.12,  // Non-registered - 50% of gains taxed at ~24% = 12% effective
+            // US
+            roth: 0,        // Roth IRA - tax-free
+            k401: 0.22,     // 401(k) - taxed on withdrawal (avg 22%)
+            tradIra: 0.22,  // Traditional IRA - taxed on withdrawal
+            brokerage: 0.15 // Brokerage - capital gains tax (~15%)
         };
         
+        function updateCountryAccounts() {
+            const country = document.getElementById('taxCountry').value;
+            document.getElementById('accountsCa').classList.toggle('hidden', country !== 'ca');
+            document.getElementById('accountsUs').classList.toggle('hidden', country !== 'us');
+            document.getElementById('accountsOther').classList.toggle('hidden', country !== 'other');
+            document.getElementById('allocStatus').classList.toggle('hidden', country === 'other');
+            validateAllocation();
+        }
+        
         function validateAllocation() {
-            const tfsa = parseFloat(document.getElementById('allocTfsa').value) || 0;
-            const rrsp = parseFloat(document.getElementById('allocRrsp').value) || 0;
-            const fhsa = parseFloat(document.getElementById('allocFhsa').value) || 0;
-            const taxable = parseFloat(document.getElementById('allocTaxable').value) || 0;
-            const total = tfsa + rrsp + fhsa + taxable;
+            const country = document.getElementById('taxCountry').value;
+            if (country === 'other') return;
+            
+            let total = 0;
+            if (country === 'ca') {
+                total = (parseFloat(document.getElementById('allocTfsa').value) || 0) +
+                        (parseFloat(document.getElementById('allocRrsp').value) || 0) +
+                        (parseFloat(document.getElementById('allocFhsa').value) || 0) +
+                        (parseFloat(document.getElementById('allocTaxable').value) || 0);
+            } else if (country === 'us') {
+                total = (parseFloat(document.getElementById('allocRoth').value) || 0) +
+                        (parseFloat(document.getElementById('alloc401k').value) || 0) +
+                        (parseFloat(document.getElementById('allocTradIra').value) || 0) +
+                        (parseFloat(document.getElementById('allocBrokerage').value) || 0);
+            }
             
             const statusEl = document.getElementById('allocStatus');
             if (total === 100) {
@@ -301,26 +371,48 @@
         }
         
         function getAllocations() {
-            let tfsa = parseFloat(document.getElementById('allocTfsa').value) || 0;
-            let rrsp = parseFloat(document.getElementById('allocRrsp').value) || 0;
-            let fhsa = parseFloat(document.getElementById('allocFhsa').value) || 0;
-            let taxable = parseFloat(document.getElementById('allocTaxable').value) || 0;
-            const total = tfsa + rrsp + fhsa + taxable;
+            const country = document.getElementById('taxCountry').value;
             
-            // Normalize to 100% if not exactly 100
-            if (total !== 100 && total > 0) {
+            // Default: 100% tax-free
+            if (country === 'other') {
+                return { taxFree: 1, deferred: 0, taxable: 0, deferredRate: 0, taxableRate: 0 };
+            }
+            
+            let taxFree = 0, deferred = 0, taxable = 0;
+            let deferredRate = 0.22, taxableRate = 0.12;
+            
+            if (country === 'ca') {
+                taxFree = (parseFloat(document.getElementById('allocTfsa').value) || 0) +
+                          (parseFloat(document.getElementById('allocFhsa').value) || 0);
+                deferred = parseFloat(document.getElementById('allocRrsp').value) || 0;
+                taxable = parseFloat(document.getElementById('allocTaxable').value) || 0;
+                deferredRate = taxRates.rrsp;
+                taxableRate = taxRates.taxable;
+            } else if (country === 'us') {
+                taxFree = parseFloat(document.getElementById('allocRoth').value) || 0;
+                deferred = (parseFloat(document.getElementById('alloc401k').value) || 0) +
+                           (parseFloat(document.getElementById('allocTradIra').value) || 0);
+                taxable = parseFloat(document.getElementById('allocBrokerage').value) || 0;
+                deferredRate = taxRates.k401;
+                taxableRate = taxRates.brokerage;
+            }
+            
+            const total = taxFree + deferred + taxable;
+            
+            // Normalize to 100%
+            if (total > 0 && total !== 100) {
                 const factor = 100 / total;
-                tfsa *= factor;
-                rrsp *= factor;
-                fhsa *= factor;
+                taxFree *= factor;
+                deferred *= factor;
                 taxable *= factor;
             }
             
             return {
-                tfsa: tfsa / 100,
-                rrsp: rrsp / 100,
-                fhsa: fhsa / 100,
-                taxable: taxable / 100
+                taxFree: taxFree / 100,
+                deferred: deferred / 100,
+                taxable: taxable / 100,
+                deferredRate,
+                taxableRate
             };
         }
 
@@ -383,11 +475,10 @@
             const currentYear = new Date().getFullYear();
             const alloc = getAllocations();
 
-            // Track each account separately
+            // Track 3 account categories: tax-free, tax-deferred, taxable
             let accounts = {
-                tfsa: { balance: initial * alloc.tfsa, principal: initial * alloc.tfsa },
-                rrsp: { balance: initial * alloc.rrsp, principal: initial * alloc.rrsp },
-                fhsa: { balance: initial * alloc.fhsa, principal: initial * alloc.fhsa },
+                taxFree: { balance: initial * alloc.taxFree, principal: initial * alloc.taxFree },
+                deferred: { balance: initial * alloc.deferred, principal: initial * alloc.deferred },
                 taxable: { balance: initial * alloc.taxable, principal: initial * alloc.taxable }
             };
 
@@ -408,15 +499,15 @@
                 let currentBal = 0;
                 let currentPrin = 0;
                 
-                // Calculate for each account
+                // Calculate for each account category
                 for (const [type, acc] of Object.entries(accounts)) {
                     if (i > 0) {
                         const accInterest = acc.balance - (acc.balance / (1 + rate));
                         yearlyInterest += accInterest;
                         
-                        // Apply tax for taxable accounts (annual)
-                        if (type === 'taxable') {
-                            const accTax = accInterest * taxRates.taxable;
+                        // Apply tax for taxable accounts (annual capital gains)
+                        if (type === 'taxable' && alloc.taxableRate > 0) {
+                            const accTax = accInterest * alloc.taxableRate;
                             yearlyTax += accTax;
                             totalTaxPaid += accTax;
                             acc.balance -= accTax;
@@ -444,7 +535,8 @@
                 if (i < duration) {
                     // Add annual contribution and grow each account
                     for (const [type, acc] of Object.entries(accounts)) {
-                        const additionShare = addition * alloc[type];
+                        const allocKey = type === 'taxFree' ? 'taxFree' : type;
+                        const additionShare = addition * alloc[allocKey];
                         acc.balance = (acc.balance + additionShare) * (1 + rate);
                         acc.principal += additionShare;
                     }
@@ -459,10 +551,10 @@
                 totalPrin += acc.principal;
             }
 
-            // Apply RRSP withdrawal tax at end
-            const rrspWithdrawalTax = accounts.rrsp.balance * taxRates.rrsp;
-            totalTaxPaid += rrspWithdrawalTax;
-            let finalBalance = totalBal - rrspWithdrawalTax;
+            // Apply deferred account withdrawal tax at end (RRSP, 401k, Traditional IRA)
+            const deferredWithdrawalTax = accounts.deferred.balance * alloc.deferredRate;
+            totalTaxPaid += deferredWithdrawalTax;
+            let finalBalance = totalBal - deferredWithdrawalTax;
 
             const totalInterest = totalBal - totalPrin;
             const currentBal = totalBal;
