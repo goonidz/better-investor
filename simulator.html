@@ -153,38 +153,14 @@
                             <div class="mb-3">
                                 <label class="label-style text-slate-400 mb-2 block">Country</label>
                                 <select id="taxCountry" class="input-box !py-2 !text-sm" onchange="updateCountryAccounts()">
-                                    <option value="ca">🇨🇦 Canada</option>
                                     <option value="us">🇺🇸 United States</option>
+                                    <option value="ca">🇨🇦 Canada</option>
                                     <option value="other">🌍 Other / No tax</option>
                                 </select>
                             </div>
                             
-                            <!-- Canada Accounts -->
-                            <div id="accountsCa" class="space-y-2">
-                                <div class="flex items-center gap-2">
-                                    <div class="w-32 text-xs font-bold text-emerald-600">TFSA (0%)</div>
-                                    <input type="number" id="allocTfsa" class="input-box flex-1 !py-2 !text-sm" value="100" min="0" max="100" onchange="validateAllocation()">
-                                    <span class="text-xs text-slate-400 w-4">%</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-32 text-xs font-bold text-blue-600">RRSP (~22%)</div>
-                                    <input type="number" id="allocRrsp" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
-                                    <span class="text-xs text-slate-400 w-4">%</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-32 text-xs font-bold text-purple-600">FHSA (0%)</div>
-                                    <input type="number" id="allocFhsa" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
-                                    <span class="text-xs text-slate-400 w-4">%</span>
-                                </div>
-                                <div class="flex items-center gap-2">
-                                    <div class="w-32 text-xs font-bold text-orange-600">Non-Registered (~12%)</div>
-                                    <input type="number" id="allocTaxable" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
-                                    <span class="text-xs text-slate-400 w-4">%</span>
-                                </div>
-                            </div>
-                            
-                            <!-- US Accounts -->
-                            <div id="accountsUs" class="space-y-2 hidden">
+                            <!-- US Accounts (default - shown first) -->
+                            <div id="accountsUs" class="space-y-2">
                                 <div class="flex items-center gap-2">
                                     <div class="w-32 text-xs font-bold text-emerald-600">Roth IRA (0%)</div>
                                     <input type="number" id="allocRoth" class="input-box flex-1 !py-2 !text-sm" value="100" min="0" max="100" onchange="validateAllocation()">
@@ -203,6 +179,30 @@
                                 <div class="flex items-center gap-2">
                                     <div class="w-32 text-xs font-bold text-orange-600">Brokerage (~15%)</div>
                                     <input type="number" id="allocBrokerage" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
+                                    <span class="text-xs text-slate-400 w-4">%</span>
+                                </div>
+                            </div>
+                            
+                            <!-- Canada Accounts (hidden by default) -->
+                            <div id="accountsCa" class="space-y-2 hidden">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-32 text-xs font-bold text-emerald-600">TFSA (0%)</div>
+                                    <input type="number" id="allocTfsa" class="input-box flex-1 !py-2 !text-sm" value="100" min="0" max="100" onchange="validateAllocation()">
+                                    <span class="text-xs text-slate-400 w-4">%</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-32 text-xs font-bold text-blue-600">RRSP (~22%)</div>
+                                    <input type="number" id="allocRrsp" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
+                                    <span class="text-xs text-slate-400 w-4">%</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-32 text-xs font-bold text-purple-600">FHSA (0%)</div>
+                                    <input type="number" id="allocFhsa" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
+                                    <span class="text-xs text-slate-400 w-4">%</span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <div class="w-32 text-xs font-bold text-orange-600">Non-Registered (~12%)</div>
+                                    <input type="number" id="allocTaxable" class="input-box flex-1 !py-2 !text-sm" value="0" min="0" max="100" onchange="validateAllocation()">
                                     <span class="text-xs text-slate-400 w-4">%</span>
                                 </div>
                             </div>
@@ -333,8 +333,8 @@
         
         function updateCountryAccounts() {
             const country = document.getElementById('taxCountry').value;
-            document.getElementById('accountsCa').classList.toggle('hidden', country !== 'ca');
             document.getElementById('accountsUs').classList.toggle('hidden', country !== 'us');
+            document.getElementById('accountsCa').classList.toggle('hidden', country !== 'ca');
             document.getElementById('accountsOther').classList.toggle('hidden', country !== 'other');
             document.getElementById('allocStatus').classList.toggle('hidden', country === 'other');
             validateAllocation();
@@ -345,16 +345,16 @@
             if (country === 'other') return;
             
             let total = 0;
-            if (country === 'ca') {
-                total = (parseFloat(document.getElementById('allocTfsa').value) || 0) +
-                        (parseFloat(document.getElementById('allocRrsp').value) || 0) +
-                        (parseFloat(document.getElementById('allocFhsa').value) || 0) +
-                        (parseFloat(document.getElementById('allocTaxable').value) || 0);
-            } else if (country === 'us') {
+            if (country === 'us') {
                 total = (parseFloat(document.getElementById('allocRoth').value) || 0) +
                         (parseFloat(document.getElementById('alloc401k').value) || 0) +
                         (parseFloat(document.getElementById('allocTradIra').value) || 0) +
                         (parseFloat(document.getElementById('allocBrokerage').value) || 0);
+            } else if (country === 'ca') {
+                total = (parseFloat(document.getElementById('allocTfsa').value) || 0) +
+                        (parseFloat(document.getElementById('allocRrsp').value) || 0) +
+                        (parseFloat(document.getElementById('allocFhsa').value) || 0) +
+                        (parseFloat(document.getElementById('allocTaxable').value) || 0);
             }
             
             const statusEl = document.getElementById('allocStatus');
@@ -379,22 +379,22 @@
             }
             
             let taxFree = 0, deferred = 0, taxable = 0;
-            let deferredRate = 0.22, taxableRate = 0.12;
+            let deferredRate = 0.22, taxableRate = 0.15;
             
-            if (country === 'ca') {
-                taxFree = (parseFloat(document.getElementById('allocTfsa').value) || 0) +
-                          (parseFloat(document.getElementById('allocFhsa').value) || 0);
-                deferred = parseFloat(document.getElementById('allocRrsp').value) || 0;
-                taxable = parseFloat(document.getElementById('allocTaxable').value) || 0;
-                deferredRate = taxRates.rrsp;
-                taxableRate = taxRates.taxable;
-            } else if (country === 'us') {
+            if (country === 'us') {
                 taxFree = parseFloat(document.getElementById('allocRoth').value) || 0;
                 deferred = (parseFloat(document.getElementById('alloc401k').value) || 0) +
                            (parseFloat(document.getElementById('allocTradIra').value) || 0);
                 taxable = parseFloat(document.getElementById('allocBrokerage').value) || 0;
                 deferredRate = taxRates.k401;
                 taxableRate = taxRates.brokerage;
+            } else if (country === 'ca') {
+                taxFree = (parseFloat(document.getElementById('allocTfsa').value) || 0) +
+                          (parseFloat(document.getElementById('allocFhsa').value) || 0);
+                deferred = parseFloat(document.getElementById('allocRrsp').value) || 0;
+                taxable = parseFloat(document.getElementById('allocTaxable').value) || 0;
+                deferredRate = taxRates.rrsp;
+                taxableRate = taxRates.taxable;
             }
             
             const total = taxFree + deferred + taxable;
