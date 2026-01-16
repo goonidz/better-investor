@@ -242,13 +242,13 @@
                             
                             <!-- Tax Calculation Explanation -->
                             <div class="mt-4 pt-3 border-t border-slate-200">
-                                <p class="text-[10px] text-slate-500 font-semibold mb-2">📊 How taxes are calculated:</p>
+                                <p class="text-[10px] text-slate-500 font-semibold mb-2">📊 How taxes are calculated (on 4% annual withdrawals):</p>
                                 <ul class="text-[10px] text-slate-400 space-y-1 list-disc list-inside">
-                                    <li><span class="text-emerald-600 font-bold">Roth IRA / TFSA / FHSA (0%)</span> — No tax during growth or on withdrawal</li>
-                                    <li><span class="text-blue-600 font-bold">401(k) / IRA / RRSP (~22%)</span> — Tax-deferred: grows tax-free, but <u>entire balance</u> taxed when you withdraw in retirement</li>
-                                    <li><span class="text-orange-600 font-bold">Brokerage / Non-Reg (~12-15%)</span> — Capital gains taxed annually on realized gains (simplified estimate)</li>
+                                    <li><span class="text-emerald-600 font-bold">Roth IRA / TFSA / FHSA</span> — Withdraw tax-free</li>
+                                    <li><span class="text-blue-600 font-bold">401(k) / IRA / RRSP</span> — ~22% tax on each withdrawal (entire amount is taxable income)</li>
+                                    <li><span class="text-orange-600 font-bold">Brokerage / Non-Reg</span> — ~15% tax on gains portion only (~50% of withdrawal)</li>
                                 </ul>
-                                <p class="text-[10px] text-slate-400 mt-2 italic">⚠️ This assumes you withdraw everything at the end. In reality, gradual withdrawals may result in lower taxes. Consult a tax professional for your specific situation.</p>
+                                <p class="text-[10px] text-slate-400 mt-2 italic">💡 Your portfolio balance stays intact. Taxes are calculated on your annual 4% withdrawals, not the total balance.</p>
                             </div>
                         </div>
                     </details>
@@ -269,7 +269,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="bg-white p-12 rounded-[3rem] border border-slate-100 shadow-xl text-center">
-                    <p class="label-style text-slate-400">Final Net Worth (After Tax)</p>
+                    <p class="label-style text-slate-400">Final Net Worth</p>
                     <h3 class="text-5xl font-black text-slate-900 mt-2" id="resTotal">$0</h3>
                 </div>
                 <div class="bg-[#6366f1] p-12 rounded-[3rem] text-white text-center shadow-2xl shadow-indigo-200">
@@ -280,11 +280,11 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="bg-emerald-500 p-12 rounded-[3rem] text-white text-center shadow-xl shadow-emerald-100">
-                    <p class="label-style text-white/70">Monthly Freedom Income</p>
+                    <p class="label-style text-white/70">Monthly Income (After Tax)</p>
                     <h3 class="text-5xl font-black mt-2" id="resMonthly">$0</h3>
                 </div>
                 <div class="bg-slate-900 p-12 rounded-[3rem] text-white text-center">
-                    <p class="label-style text-white/40">Yearly Passive Cashflow</p>
+                    <p class="label-style text-white/40">Yearly Income (After Tax)</p>
                     <h3 class="text-5xl font-black mt-2" id="resYearly">$0</h3>
                 </div>
             </div>
@@ -588,16 +588,34 @@
                 totalPrin += acc.principal;
             }
 
-            // Apply deferred account withdrawal tax at end (RRSP, 401k, Traditional IRA)
-            const deferredWithdrawalTax = accounts.deferred.balance * alloc.deferredRate;
-            totalTaxPaid += deferredWithdrawalTax;
-            let finalBalance = totalBal - deferredWithdrawalTax;
-
             const totalInterest = totalBal - totalPrin;
             const currentBal = totalBal;
             const currentPrin = totalPrin;
-            const annualInc = finalBalance * 0.04;
+            
+            // Calculate annual withdrawal income (4% rule) with taxes on withdrawals
+            const withdrawalRate = 0.04;
+            
+            // Tax-free accounts: withdraw tax-free
+            const taxFreeWithdrawal = accounts.taxFree.balance * withdrawalRate;
+            
+            // Deferred accounts: taxed on withdrawal (whole withdrawal is taxable income)
+            const deferredWithdrawalGross = accounts.deferred.balance * withdrawalRate;
+            const deferredWithdrawalTax = deferredWithdrawalGross * alloc.deferredRate;
+            const deferredWithdrawalNet = deferredWithdrawalGross - deferredWithdrawalTax;
+            
+            // Taxable accounts: only gains portion taxed (simplified: assume 50% is gains)
+            const taxableWithdrawalGross = accounts.taxable.balance * withdrawalRate;
+            const taxableGainsPortion = taxableWithdrawalGross * 0.5; // ~50% of balance is typically gains
+            const taxableWithdrawalTax = taxableGainsPortion * alloc.taxableRate;
+            const taxableWithdrawalNet = taxableWithdrawalGross - taxableWithdrawalTax;
+            
+            // Total annual income after taxes
+            const annualInc = taxFreeWithdrawal + deferredWithdrawalNet + taxableWithdrawalNet;
+            const annualTaxOnWithdrawals = deferredWithdrawalTax + taxableWithdrawalTax;
             const monthlyInc = annualInc / 12;
+            
+            // Final balance stays the same (we don't subtract all taxes upfront)
+            let finalBalance = totalBal;
             const interestPct = Math.round((totalInterest / currentBal) * 100);
 
             animateValue("resTotal", 0, finalBalance, 1500);
@@ -608,14 +626,15 @@
             document.getElementById('tableBody').innerHTML = tableHTML;
             
             // Build summary with tax info
-            let summaryHTML = `In <span class="highlight">${duration} years</span>, you <span class="highlight">will reach</span> a total of <span class="highlight">${fmt.format(currentBal)}</span>`;
+            let summaryHTML = `In <span class="highlight">${duration} years</span>, you <span class="highlight">will reach</span> a total of <span class="highlight">${fmt.format(currentBal)}</span>. `;
             
-            if (totalTaxPaid > 0) {
-                summaryHTML += ` → <span class="highlight">${fmt.format(finalBalance)}</span> after <span class="text-red-500">${fmt.format(totalTaxPaid)} taxes</span>`;
+            summaryHTML += `This portfolio <span class="highlight">will generate</span> a passive income of <span class="highlight">${fmt.format(monthlyInc)}/mo</span> (after taxes)`;
+            
+            if (annualTaxOnWithdrawals > 0) {
+                summaryHTML += ` — you'll pay ~<span class="text-red-500">${fmt.format(annualTaxOnWithdrawals)}/year</span> in taxes on your withdrawals`;
             }
             
-            summaryHTML += `. This portfolio <span class="highlight">will generate</span> a passive income of <span class="highlight">${fmt.format(monthlyInc)}/mo</span>. `;
-            summaryHTML += `The market <span class="highlight">will have gifted</span> you <span class="highlight">${fmt.format(totalInterest)}</span> (${interestPct}% of your wealth).`;
+            summaryHTML += `. The market <span class="highlight">will have gifted</span> you <span class="highlight">${fmt.format(totalInterest)}</span> (${interestPct}% of your wealth).`;
             
             document.getElementById('dynamicSummary').innerHTML = summaryHTML;
 
