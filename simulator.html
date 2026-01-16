@@ -255,7 +255,8 @@
                         { label: 'Initial Balance', data: [], backgroundColor: '#f1f5f9', fill: true, pointRadius: 0, stack: '1' },
                         { label: 'Deposits', data: [], backgroundColor: '#cbd5e1', fill: true, pointRadius: 0, stack: '1' },
                         { label: 'Fees Lost', data: [], backgroundColor: '#991b1b', fill: true, pointRadius: 0, stack: '1' },
-                        { label: 'Net Interest', data: [], backgroundColor: '#6366f1', fill: true, pointRadius: 0, stack: '1' }
+                        { label: 'Net Interest', data: [], backgroundColor: '#6366f1', fill: true, pointRadius: 0, stack: '1' },
+                        { label: 'Without Fees', data: [], borderColor: '#10b981', borderWidth: 2, borderDash: [6, 4], fill: false, pointRadius: 0, stack: false }
                     ]
                 },
                 options: { 
@@ -306,12 +307,14 @@
             const currentYear = new Date().getFullYear();
 
             let currentBal = initial;
+            let currentBalNoFees = initial; // Track balance without fees for comparison
             let currentPrin = initial;
             let labels = [];
             let dataInit = [];
             let dataDep = [];
             let dataInt = [];
             let dataFees = [];
+            let dataNoFees = [];
             let tableHTML = "";
             let totalFeesPaid = 0;
 
@@ -334,6 +337,7 @@
                 dataDep.push(currentPrin - initial);
                 dataFees.push(totalFeesPaid);
                 dataInt.push(Math.max(0, currentBal - currentPrin));
+                dataNoFees.push(currentBalNoFees); // Line showing what you'd have without fees
                 
                 const feesDisplay = yearlyFees > 0 ? ` <span class="text-red-400 text-sm">(-${fmt.format(yearlyFees)} fees)</span>` : '';
                 
@@ -347,9 +351,12 @@
                 if (i < duration) {
                     // Grow, add contribution, subtract fees
                     currentBal = (currentBal + addition) * (1 + rate) * (1 - fees);
+                    currentBalNoFees = (currentBalNoFees + addition) * (1 + rate); // No fees version
                     currentPrin += addition;
                 }
             }
+            
+            const lostToFees = currentBalNoFees - currentBal;
 
             const totalInterest = currentBal - currentPrin;
             const annualInc = currentBal * 0.04;
@@ -369,8 +376,9 @@
             summaryHTML += `This portfolio <span class="highlight">will generate</span> a passive income of <span class="highlight">${fmt.format(monthlyInc)}/mo</span>. `;
             summaryHTML += `The market <span class="highlight">will have gifted</span> you <span class="highlight">${fmt.format(totalInterest)}</span> (${interestPct}% of your wealth)`;
             
-            if (totalFeesPaid > 0) {
-                summaryHTML += `, but you'll have paid <span class="text-red-500">${fmt.format(totalFeesPaid)}</span> in fees over ${duration} years`;
+            if (lostToFees > 0) {
+                const feesPctLost = Math.round((lostToFees / currentBalNoFees) * 100);
+                summaryHTML += `. <span class="text-red-600 font-bold">⚠️ Fees cost you ${fmt.format(lostToFees)}</span> — without them you'd have <span class="text-emerald-600 font-bold">${fmt.format(currentBalNoFees)}</span> (${feesPctLost}% lost to fees!)`;
             }
             summaryHTML += `.`;
             
@@ -381,6 +389,7 @@
             myChart.data.datasets[1].data = dataDep;
             myChart.data.datasets[2].data = dataFees;
             myChart.data.datasets[3].data = dataInt;
+            myChart.data.datasets[4].data = dataNoFees;
             
             myChart.options.interaction = { mode: 'index', intersect: false, axis: 'x' };
             myChart.options.plugins.tooltip = {
