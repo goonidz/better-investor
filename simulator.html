@@ -140,6 +140,18 @@
                     <h3 class="label-style">Step 2: Strategy</h3>
                     <div><label class="label-style text-slate-300">Initial Capital ($)</label><input type="number" id="initialCapital" class="input-box" value="50000"></div>
                     <div><label class="label-style text-slate-300">Annual Addition ($)</label><input type="number" id="annualAddition" class="input-box" value="15000"></div>
+                    
+                    <!-- Tax Options -->
+                    <div class="mt-6 p-4 bg-slate-50 rounded-2xl">
+                        <label class="label-style text-slate-400 mb-3">Account Type (Tax Impact)</label>
+                        <select id="accountType" class="input-box" onchange="updateTaxInfo()">
+                            <option value="tfsa">TFSA (0% tax - Tax-Free)</option>
+                            <option value="rrsp">RRSP (~25% tax on withdrawal)</option>
+                            <option value="fhsa">FHSA (Tax-free if used for home)</option>
+                            <option value="taxable">Taxable Account (~25% on gains)</option>
+                        </select>
+                        <p id="taxInfo" class="text-xs text-slate-400 mt-2 font-medium">✓ No tax on investment returns or withdrawals</p>
+                    </div>
                 </div>
             </div>
             <button onclick="ignite()" class="btn-giant">Generate My Retirement Path</button>
@@ -157,7 +169,7 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div class="bg-white p-12 rounded-[3rem] border border-slate-100 shadow-xl text-center">
-                    <p class="label-style text-slate-400">Final Net Worth</p>
+                    <p class="label-style text-slate-400">Final Net Worth (After Tax)</p>
                     <h3 class="text-5xl font-black text-slate-900 mt-2" id="resTotal">$0</h3>
                 </div>
                 <div class="bg-[#6366f1] p-12 rounded-[3rem] text-white text-center shadow-2xl shadow-indigo-200">
@@ -241,6 +253,26 @@
     <script>
         let myChart;
         const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+        
+        // Tax rates by account type
+        const taxRates = {
+            tfsa: 0,        // Tax-Free Savings Account
+            rrsp: 0.25,     // RRSP - taxed on withdrawal (avg 25%)
+            fhsa: 0,        // FHSA - tax-free if used for home
+            taxable: 0.125  // Taxable account - 50% of gains taxed at 25% = 12.5% effective
+        };
+        
+        const taxInfo = {
+            tfsa: '✓ No tax on investment returns or withdrawals',
+            rrsp: '⚠️ Tax deferred now, ~25% tax when you withdraw in retirement',
+            fhsa: '✓ Tax-free if used for first home purchase, otherwise taxed like RRSP',
+            taxable: '⚠️ ~50% of capital gains taxable (effective ~12.5% tax on total gains)'
+        };
+        
+        function updateTaxInfo() {
+            const accountType = document.getElementById('accountType').value;
+            document.getElementById('taxInfo').innerText = taxInfo[accountType];
+        }
 
         window.onload = function() {
             const ctx = document.getElementById('projectionChart').getContext('2d');
@@ -299,6 +331,8 @@
             const initial = parseFloat(document.getElementById('initialCapital').value);
             const addition = parseFloat(document.getElementById('annualAddition').value);
             const currentYear = new Date().getFullYear();
+            const accountType = document.getElementById('accountType').value;
+            const taxRate = taxRates[accountType];
 
             let currentBal = initial;
             let currentPrin = initial;
@@ -307,6 +341,7 @@
             let dataDep = [];
             let dataInt = [];
             let tableHTML = "";
+            let totalTaxPaid = 0;
 
             for (let i = 0; i <= duration; i++) {
                 const year = currentYear + i;
@@ -314,8 +349,18 @@
                 labels.push(year);
                 
                 let yearlyInterest = 0;
+                let yearlyTax = 0;
                 if (i > 0) {
                     yearlyInterest = currentBal - ( (currentBal / (1 + rate)) );
+                    
+                    // Apply tax on gains
+                    yearlyTax = yearlyInterest * taxRate;
+                    totalTaxPaid += yearlyTax;
+                    
+                    // For taxable accounts, reduce balance by tax paid annually
+                    if (accountType === 'taxable') {
+                        currentBal -= yearlyTax;
+                    }
                 }
                 let monthlyInterest = yearlyInterest / 12;
 
@@ -323,9 +368,11 @@
                 dataDep.push(currentPrin - initial);
                 dataInt.push(Math.max(0, currentBal - currentPrin));
                 
+                const taxDisplay = yearlyTax > 0 ? ` <span class="text-red-400 text-sm">(-${fmt.format(yearlyTax)} tax)</span>` : '';
+                
                 tableHTML += `<tr>
                     <td class="font-bold text-slate-900">${year} <span class="text-slate-400 font-medium ml-1">(${age})</span></td>
-                    <td class="text-center text-emerald-500 font-bold">+${fmt.format(yearlyInterest)}</td>
+                    <td class="text-center text-emerald-500 font-bold">+${fmt.format(yearlyInterest)}${taxDisplay}</td>
                     <td class="text-center text-indigo-400 font-medium">${fmt.format(monthlyInterest)}/mo</td>
                     <td class="text-right font-black text-slate-900">${fmt.format(currentBal)}</td>
                 </tr>`;
@@ -336,22 +383,39 @@
                 }
             }
 
+            // Apply final withdrawal tax for RRSP
+            let finalBalance = currentBal;
+            if (accountType === 'rrsp') {
+                const withdrawalTax = currentBal * taxRate;
+                totalTaxPaid += withdrawalTax;
+                finalBalance = currentBal * (1 - taxRate);
+            }
+
             const totalInterest = currentBal - currentPrin;
-            const annualInc = currentBal * 0.04;
+            const annualInc = finalBalance * 0.04;
             const monthlyInc = annualInc / 12;
             const interestPct = Math.round((totalInterest / currentBal) * 100);
 
-            animateValue("resTotal", 0, currentBal, 1500);
+            animateValue("resTotal", 0, finalBalance, 1500);
             animateValue("resInterest", 0, totalInterest, 1500);
             animateValue("resMonthly", 0, monthlyInc, 1500);
             animateValue("resYearly", 0, annualInc, 1500);
 
             document.getElementById('tableBody').innerHTML = tableHTML;
             
-            document.getElementById('dynamicSummary').innerHTML = 
-                `In <span class="highlight">${duration} years</span>, you <span class="highlight">will reach</span> a total of <span class="highlight">${fmt.format(currentBal)}</span>. ` +
-                `This portfolio <span class="highlight">will generate</span> a passive income of <span class="highlight">${fmt.format(monthlyInc)}/mo</span>. ` +
-                `The market <span class="highlight">will have gifted</span> you <span class="highlight">${fmt.format(totalInterest)}</span> (${interestPct}% of your wealth).`;
+            // Build summary with tax info
+            let summaryHTML = `In <span class="highlight">${duration} years</span>, you <span class="highlight">will reach</span> a total of <span class="highlight">${fmt.format(currentBal)}</span>`;
+            
+            if (accountType === 'rrsp') {
+                summaryHTML += ` (${fmt.format(finalBalance)} after ${fmt.format(totalTaxPaid)} withdrawal tax)`;
+            } else if (totalTaxPaid > 0) {
+                summaryHTML += ` (${fmt.format(totalTaxPaid)} paid in taxes)`;
+            }
+            
+            summaryHTML += `. This portfolio <span class="highlight">will generate</span> a passive income of <span class="highlight">${fmt.format(monthlyInc)}/mo</span>. `;
+            summaryHTML += `The market <span class="highlight">will have gifted</span> you <span class="highlight">${fmt.format(totalInterest)}</span> (${interestPct}% of your wealth).`;
+            
+            document.getElementById('dynamicSummary').innerHTML = summaryHTML;
 
             myChart.data.labels = labels;
             myChart.data.datasets[0].data = dataInit;
