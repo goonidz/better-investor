@@ -254,8 +254,8 @@
                     datasets: [
                         { label: 'Initial Balance', data: [], backgroundColor: '#f1f5f9', fill: true, pointRadius: 0, stack: '1' },
                         { label: 'Deposits', data: [], backgroundColor: '#cbd5e1', fill: true, pointRadius: 0, stack: '1' },
-                        { label: 'Accrued Interest', data: [], backgroundColor: '#6366f1', fill: true, pointRadius: 0, stack: '1' },
-                        { label: 'Fees Paid', data: [], backgroundColor: '#ef4444', fill: true, pointRadius: 0, stack: '1' }
+                        { label: 'Fees Lost', data: [], backgroundColor: '#991b1b', fill: true, pointRadius: 0, stack: '1' },
+                        { label: 'Net Interest', data: [], backgroundColor: '#6366f1', fill: true, pointRadius: 0, stack: '1' }
                     ]
                 },
                 options: { 
@@ -332,8 +332,8 @@
 
                 dataInit.push(initial);
                 dataDep.push(currentPrin - initial);
-                dataInt.push(Math.max(0, currentBal - currentPrin - totalFeesPaid));
                 dataFees.push(totalFeesPaid);
+                dataInt.push(Math.max(0, currentBal - currentPrin));
                 
                 const feesDisplay = yearlyFees > 0 ? ` <span class="text-red-400 text-sm">(-${fmt.format(yearlyFees)} fees)</span>` : '';
                 
@@ -379,8 +379,8 @@
             myChart.data.labels = labels;
             myChart.data.datasets[0].data = dataInit;
             myChart.data.datasets[1].data = dataDep;
-            myChart.data.datasets[2].data = dataInt;
-            myChart.data.datasets[3].data = dataFees;
+            myChart.data.datasets[2].data = dataFees;
+            myChart.data.datasets[3].data = dataInt;
             
             myChart.options.interaction = { mode: 'index', intersect: false, axis: 'x' };
             myChart.options.plugins.tooltip = {
@@ -390,7 +390,10 @@
                 callbacks: {
                     title: (tooltipItems) => `Age ${startAge + tooltipItems[0].dataIndex}`,
                     label: (ctx) => ` ${ctx.dataset.label}: ${fmt.format(ctx.raw)}`,
-                    footer: (items) => ' NET TOTAL: ' + fmt.format(items[0].raw + items[1].raw + items[2].raw)
+                    footer: (items) => {
+                        const total = items[0].raw + items[1].raw + items[3].raw; // Initial + Deposits + Net Interest (excluding fees)
+                        return ' NET BALANCE: ' + fmt.format(total);
+                    }
                 }
             };
             myChart.update();
