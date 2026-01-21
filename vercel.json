@@ -1,0 +1,16 @@
+{
+  "crons": [
+    {
+      "path": "/api/insider?cron=true",
+      "schedule": "0 14 * * 1-5"
+    },
+    {
+      "path": "/api/credits-reset",
+      "schedule": "1 0 1 * *"
+    },
+    {
+      "path": "/api/portfolio-snapshot",
+      "schedule": "0 23 * * *"
+    }
+  ]
+}

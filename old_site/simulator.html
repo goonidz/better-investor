@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulator - Better Investor</title>
+    
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PRYY0KZ7HK"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-PRYY0KZ7HK', {
+            'send_page_view': true,
+            'allow_enhanced_conversions': false,
+            'allow_google_signals': false
+        });
+        
+        // Désactiver les événements automatiques non désirés
+        gtag('set', 'allow_ad_personalization_signals', false);
+    </script>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #fcfdfe; color: #1e293b; overflow-x: hidden; }
+        
+        .input-box { border: 2px solid #e2e8f0 !important; border-radius: 16px !important; padding: 14px 18px !important; width: 100% !important; background: #ffffff !important; outline: none !important; font-weight: 600; transition: all 0.2s; }
+        .input-box:focus { border-color: #6366f1 !important; box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1) !important; }
+        
+        .setup-card { background: white !important; border-radius: 40px !important; border: 1px solid #f1f5f9 !important; padding: 48px !important; max-width: 950px; margin: 0 auto; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.04); }
+        
+        .btn-giant { background-color: #6366f1 !important; color: white !important; font-weight: 800 !important; font-size: 1.1rem !important; padding: 20px !important; border-radius: 22px !important; width: 100% !important; text-transform: uppercase !important; letter-spacing: 0.1em; cursor: pointer; border: none; transition: all 0.3s ease; }
+        .btn-giant:hover { background-color: #4f46e5 !important; transform: translateY(-2px); box-shadow: 0 20px 25px -5px rgba(99, 102, 241, 0.3) !important; }
+
+        .btn-bottom { background-color: #ffffff !important; color: #6366f1 !important; font-weight: 800 !important; padding: 18px 32px !important; border-radius: 20px !important; border: 2px solid #6366f1 !important; text-transform: uppercase !important; cursor: pointer; transition: all 0.2s ease; }
+
+        .chart-section { position: relative; height: 500px; border-radius: 40px; background: #ffffff; margin-top: 20px; }
+        .label-style { display: block; font-size: 11px; font-weight: 800; color: #6366f1; text-transform: uppercase; letter-spacing: 0.15em; margin-bottom: 10px; }
+        
+        .results-table { display: table !important; width: 100% !important; border-collapse: collapse !important; table-layout: fixed; }
+        .results-table thead { display: table-header-group !important; }
+        .results-table tr { display: table-row !important; }
+        .results-table th, .results-table td { display: table-cell !important; padding: 16px 12px !important; border-bottom: 1px solid #f8fafc !important; }
+
+        .summary-box { background: linear-gradient(145deg, #f5f7ff, #ffffff); border: 1px solid #e0e7ff; border-radius: 30px; padding: 30px; margin-bottom: 20px; text-align: center; }
+        .highlight { color: #6366f1; font-weight: 800; }
+        
+        .fade-in { animation: fadeIn 0.8s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Info Banner */
+        .info-banner { 
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            padding: 16px 24px;
+            border-radius: 20px;
+            text-align: center;
+            margin: 0 auto 40px;
+            max-width: 850px;
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.2);
+        }
+        .info-banner strong { font-weight: 800; }
+        .info-banner .icon { font-size: 1.3rem; margin-right: 8px; vertical-align: middle; }
+        
+        /* Footer Styles */
+        .site-footer { background: #fcfdfe; color: #475569; padding: 30px 20px 20px; margin-top: 60px; border-top: 1px solid #e2e8f0; }
+        .footer-content { max-width: 1200px; margin: 0 auto; }
+        .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 20px; }
+        .footer-section h3 { color: #1e293b; font-weight: 700; font-size: 0.95rem; margin-bottom: 10px; }
+        .footer-section ul { list-style: none; padding: 0; margin: 0; }
+        .footer-section ul li { margin-bottom: 6px; }
+        .footer-section a { color: #64748b; text-decoration: none; transition: color 0.2s; font-size: 0.9rem; }
+        .footer-section a:hover { color: #6366f1; }
+        .footer-bottom { border-top: 1px solid #e2e8f0; padding-top: 15px; text-align: center; color: #94a3b8; font-size: 0.85rem; }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            body { padding: 20px 15px; }
+            header h1 { font-size: 3rem !important; line-height: 1.1; }
+            header p { font-size: 1.1rem !important; }
+            .setup-card { padding: 32px 24px !important; border-radius: 28px !important; }
+            .btn-giant { font-size: 1.1rem !important; padding: 20px !important; min-height: 70px; }
+            .btn-bottom { font-size: 1rem !important; padding: 16px 28px !important; }
+            .label-style { font-size: 12px; margin-bottom: 8px; }
+            .input-box { padding: 16px 18px !important; font-size: 18px !important; border-radius: 14px !important; }
+            .chart-section { height: 400px; }
+            .summary-box { padding: 25px; border-radius: 24px; font-size: 1.1rem; }
+            .site-footer { padding: 25px 20px 20px; margin-top: 50px; }
+            .footer-grid { grid-template-columns: 1fr; gap: 25px; text-align: center; }
+            .footer-section { margin-bottom: 20px; }
+            .footer-section h3 { font-size: 1.1rem; }
+            .footer-section a { font-size: 1rem; }
+            .footer-bottom { font-size: 0.9rem; }
+        }
+        
+        @media (max-width: 480px) {
+            header h1 { font-size: 2.5rem !important; }
+            header p { font-size: 1rem !important; }
+            .setup-card { padding: 28px 20px !important; }
+            .btn-giant { font-size: 1rem !important; padding: 18px !important; min-height: 65px; }
+            .chart-section { height: 350px; }
+            .results-table th, .results-table td { padding: 12px 10px !important; font-size: 0.95rem; }
+            .label-style { font-size: 11px; }
+            .input-box { padding: 15px 16px !important; font-size: 17px !important; }
+        }
+    </style>
+</head>
+<body class="py-20 px-4">
+
+    <div class="max-w-6xl mx-auto">
+        <header class="text-center mb-16">
+            <h1 class="text-5xl md:text-6xl font-black text-slate-900 tracking-tight">Simulator</h1>
+            <p class="text-slate-400 mt-4 text-xl font-medium">Engineer your exit from the 9-to-5.</p>
+        </header>
+
+        <!-- Info Banner -->
+        <div class="info-banner">
+            <span class="icon">✓</span>
+            <strong>No Email Required!</strong> This page is fully accessible. Start your projections now and explore your retirement path without any restrictions.
+        </div>
+
+        <section class="setup-card">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12 mb-10 text-left">
+                <div class="space-y-8">
+                    <h3 class="label-style">Step 1: Your Timeline</h3>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div><label class="label-style text-slate-300">Current Age</label><input type="number" id="currentAge" class="input-box" value="30"></div>
+                        <div><label class="label-style text-slate-300">Duration (Years)</label><input type="number" id="duration" class="input-box" value="20"></div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div><label class="label-style text-slate-300">Return (%)</label><input type="number" id="returnRate" class="input-box" value="8"></div>
+                        <div><label class="label-style text-slate-300">Inflation (%)</label><input type="number" id="inflationRate" class="input-box" value="3"></div>
+                    </div>
+                </div>
+                <div class="space-y-8">
+                    <h3 class="label-style">Step 2: Strategy</h3>
+                    <div class="grid grid-cols-2 gap-6">
+                        <div><label class="label-style text-slate-300">Initial Capital ($)</label><input type="number" id="initialCapital" class="input-box" value="50000"></div>
+                        <div><label class="label-style text-slate-300">Annual Addition ($)</label><input type="number" id="annualAddition" class="input-box" value="15000"></div>
+                    </div>
+                    <div>
+                        <label class="label-style text-slate-300">Annual Fees (%)</label>
+                        <input type="number" id="annualFees" class="input-box" value="0.5" step="0.1" min="0" max="5">
+                        <p class="text-[10px] text-slate-400 mt-1">Typical: 0.03% (index) - 1% (active)</p>
+                    </div>
+                </div>
+            </div>
+            <button onclick="ignite()" class="btn-giant">Generate My Retirement Path</button>
+        </section>
+
+        <div id="hiddenStats" class="hidden mt-16 space-y-12 fade-in bg-[#fcfdfe] p-4 rounded-3xl">
+            
+            <div class="summary-box">
+                <p id="dynamicSummary" class="text-xl font-semibold text-slate-600 leading-relaxed"></p>
+            </div>
+
+            <div class="chart-section bg-white">
+                <div class="h-full w-full px-4"><canvas id="projectionChart"></canvas></div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-white p-12 rounded-[3rem] border border-slate-100 shadow-xl text-center">
+                    <p class="label-style text-slate-400">Final Net Worth</p>
+                    <h3 class="text-5xl font-black text-slate-900 mt-2" id="resTotal">$0</h3>
+                </div>
+                <div class="bg-[#6366f1] p-12 rounded-[3rem] text-white text-center shadow-2xl shadow-indigo-200">
+                    <p class="label-style text-white/70">Compound Interest Gift</p>
+                    <h3 class="text-5xl font-black mt-2" id="resInterest">$0</h3>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="bg-emerald-500 p-12 rounded-[3rem] text-white text-center shadow-xl shadow-emerald-100">
+                    <p class="label-style text-white/70">Monthly Freedom Income</p>
+                    <h3 class="text-5xl font-black mt-2" id="resMonthly">$0</h3>
+                </div>
+                <div class="bg-slate-900 p-12 rounded-[3rem] text-white text-center">
+                    <p class="label-style text-white/40">Yearly Passive Cashflow</p>
+                    <h3 class="text-5xl font-black mt-2" id="resYearly">$0</h3>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-[3rem] border border-slate-100 overflow-hidden shadow-lg">
+                <div class="p-8 border-b border-slate-50"><h3 class="text-xl font-extrabold text-slate-900">Annual Growth Tracker</h3></div>
+                <div class="overflow-x-auto">
+                    <table class="results-table">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="label-style text-slate-400">Year (Age)</th>
+                                <th class="label-style text-slate-400 text-center">Yearly Interest</th>
+                                <th class="label-style text-slate-400 text-center">Monthly Interest</th>
+                                <th class="label-style text-slate-400 text-right">Total Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="text-center pt-10 pb-20">
+                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="btn-bottom">
+                    RE-SIMULATE
+                </button>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <footer class="site-footer">
+            <div class="footer-content">
+                <div class="footer-grid">
+                    <div class="footer-section">
+                        <h3>Tools</h3>
+                        <ul>
+                            <li><a href="/index.html">Retirement Planner</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h3>Legal</h3>
+                        <ul>
+                            <li><a href="/terms.html">Terms of Service</a></li>
+                            <li><a href="/privacy.html">Privacy Policy</a></li>
+                            <li><a href="/disclaimer.html">Disclaimer</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="footer-section">
+                        <h3>Contact</h3>
+                        <ul>
+                            <li><a href="/contact.html">Contact Us</a></li>
+                            <li><a href="mailto:tom@better-investor.co">tom@better-investor.co</a></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="footer-bottom">
+                    <p>&copy; 2026 Tom - Lazy Investor. All rights reserved.</p>
+                    <p style="margin-top: 10px; font-size: 0.85rem;">This tool is for educational purposes only and does not constitute financial advice.</p>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        let myChart;
+        const fmt = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
+
+        window.onload = function() {
+            const ctx = document.getElementById('projectionChart').getContext('2d');
+            myChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [
+                        { label: 'Initial Balance', data: [], backgroundColor: '#f1f5f9', fill: true, pointRadius: 0, stack: '1' },
+                        { label: 'Deposits', data: [], backgroundColor: '#cbd5e1', fill: true, pointRadius: 0, stack: '1' },
+                        { label: 'Fees Lost', data: [], backgroundColor: '#991b1b', fill: true, pointRadius: 0, stack: '1' },
+                        { label: 'Net Interest', data: [], backgroundColor: '#6366f1', fill: true, pointRadius: 0, stack: '1' },
+                        { label: 'Without Fees', data: [], borderColor: '#10b981', borderWidth: 2, borderDash: [6, 4], fill: false, pointRadius: 0, stack: false }
+                    ]
+                },
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { legend: { display: true, position: 'bottom' } },
+                    scales: { 
+                        x: { display: true, stacked: true, grid: { display: false } }, 
+                        y: { display: true, stacked: true, ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'k' } } 
+                    }
+                }
+            });
+        };
+
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                obj.innerText = fmt.format(Math.floor(progress * (end - start) + start));
+                if (progress < 1) window.requestAnimationFrame(step);
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        function ignite() {
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 }, colors: ['#6366f1', '#a855f7', '#10b981'] });
+            calculateMagic();
+        }
+
+        function calculateMagic() {
+            // Track calculation click
+            if (typeof gtag !== 'undefined') {
+                gtag('event', 'run_simulation', {
+                    'event_category': 'engagement',
+                    'event_label': 'Run Simulation'
+                });
+            }
+            
+            document.getElementById('hiddenStats').classList.remove('hidden');
+
+            const startAge = parseInt(document.getElementById('currentAge').value);
+            const duration = parseInt(document.getElementById('duration').value);
+            const rate = parseFloat(document.getElementById('returnRate').value) / 100;
+            const initial = parseFloat(document.getElementById('initialCapital').value);
+            const addition = parseFloat(document.getElementById('annualAddition').value);
+            const fees = parseFloat(document.getElementById('annualFees').value) / 100;
+            const currentYear = new Date().getFullYear();
+
+            let currentBal = initial;
+            let currentBalNoFees = initial; // Track balance without fees for comparison
+            let currentPrin = initial;
+            let labels = [];
+            let dataInit = [];
+            let dataDep = [];
+            let dataInt = [];
+            let dataFees = [];
+            let dataNoFees = [];
+            let tableHTML = "";
+            let totalFeesPaid = 0;
+
+            for (let i = 0; i <= duration; i++) {
+                const year = currentYear + i;
+                const age = startAge + i;
+                labels.push(year);
+                
+                let yearlyInterest = 0;
+                let yearlyFees = 0;
+                
+                if (i > 0) {
+                    yearlyInterest = currentBal - (currentBal / (1 + rate));
+                    yearlyFees = currentBal * fees;
+                    totalFeesPaid += yearlyFees;
+                }
+                let monthlyInterest = yearlyInterest / 12;
+
+                dataInit.push(initial);
+                dataDep.push(currentPrin - initial);
+                dataFees.push(totalFeesPaid);
+                dataInt.push(Math.max(0, currentBal - currentPrin));
+                dataNoFees.push(currentBalNoFees); // Line showing what you'd have without fees
+                
+                const feesDisplay = yearlyFees > 0 ? ` <span class="text-red-400 text-sm">(-${fmt.format(yearlyFees)} fees)</span>` : '';
+                
+                tableHTML += `<tr>
+                    <td class="font-bold text-slate-900">${year} <span class="text-slate-400 font-medium ml-1">(${age})</span></td>
+                    <td class="text-center text-emerald-500 font-bold">+${fmt.format(yearlyInterest)}${feesDisplay}</td>
+                    <td class="text-center text-indigo-400 font-medium">${fmt.format(monthlyInterest)}/mo</td>
+                    <td class="text-right font-black text-slate-900">${fmt.format(currentBal)}</td>
+                </tr>`;
+
+                if (i < duration) {
+                    // Grow, add contribution, subtract fees
+                    currentBal = (currentBal + addition) * (1 + rate) * (1 - fees);
+                    currentBalNoFees = (currentBalNoFees + addition) * (1 + rate); // No fees version
+                    currentPrin += addition;
+                }
+            }
+            
+            const lostToFees = currentBalNoFees - currentBal;
+
+            const totalInterest = currentBal - currentPrin;
+            const annualInc = currentBal * 0.04;
+            const monthlyInc = annualInc / 12;
+            const interestPct = Math.round((totalInterest / currentBal) * 100);
+
+            animateValue("resTotal", 0, currentBal, 1500);
+            animateValue("resInterest", 0, totalInterest, 1500);
+            animateValue("resMonthly", 0, monthlyInc, 1500);
+            animateValue("resYearly", 0, annualInc, 1500);
+
+            document.getElementById('tableBody').innerHTML = tableHTML;
+            
+            // Build summary
+            let summaryHTML = `In <span class="highlight">${duration} years</span>, you <span class="highlight">will reach</span> a total of <span class="highlight">${fmt.format(currentBal)}</span>. `;
+            
+            summaryHTML += `This portfolio <span class="highlight">will generate</span> a passive income of <span class="highlight">${fmt.format(monthlyInc)}/mo</span>. `;
+            summaryHTML += `The market <span class="highlight">will have gifted</span> you <span class="highlight">${fmt.format(totalInterest)}</span> (${interestPct}% of your wealth)`;
+            
+            if (lostToFees > 0) {
+                const feesPctLost = Math.round((lostToFees / currentBalNoFees) * 100);
+                summaryHTML += `. <span class="text-red-600 font-bold">⚠️ Fees cost you ${fmt.format(lostToFees)}</span> — without them you'd have <span class="text-emerald-600 font-bold">${fmt.format(currentBalNoFees)}</span> (${feesPctLost}% lost to fees!)`;
+            }
+            summaryHTML += `.`;
+            
+            document.getElementById('dynamicSummary').innerHTML = summaryHTML;
+
+            myChart.data.labels = labels;
+            myChart.data.datasets[0].data = dataInit;
+            myChart.data.datasets[1].data = dataDep;
+            myChart.data.datasets[2].data = dataFees;
+            myChart.data.datasets[3].data = dataInt;
+            myChart.data.datasets[4].data = dataNoFees;
+            
+            myChart.options.interaction = { mode: 'index', intersect: false, axis: 'x' };
+            myChart.options.plugins.tooltip = {
+                enabled: true,
+                padding: 15,
+                backgroundColor: '#1e293b',
+                callbacks: {
+                    title: (tooltipItems) => `Age ${startAge + tooltipItems[0].dataIndex}`,
+                    label: (ctx) => ` ${ctx.dataset.label}: ${fmt.format(ctx.raw)}`,
+                    footer: (items) => {
+                        const total = items[0].raw + items[1].raw + items[3].raw; // Initial + Deposits + Net Interest (excluding fees)
+                        return ' NET BALANCE: ' + fmt.format(total);
+                    }
+                }
+            };
+            myChart.update();
+        }
+    </script>
+</body>
+</html>
