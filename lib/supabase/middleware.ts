@@ -31,6 +31,11 @@ export async function updateSession(request: NextRequest) {
   // supabase.auth.getUser(). A simple mistake can make it very hard to debug
   // issues with users being logged out.
 
+  // Skip auth check for webhook endpoints
+  if (request.nextUrl.pathname.startsWith('/api/stripe/webhook')) {
+    return supabaseResponse
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -40,7 +45,9 @@ export async function updateSession(request: NextRequest) {
     !request.nextUrl.pathname.startsWith('/login') &&
     !request.nextUrl.pathname.startsWith('/register') &&
     !request.nextUrl.pathname.startsWith('/auth') &&
-    request.nextUrl.pathname !== '/'
+    !request.nextUrl.pathname.startsWith('/api/') &&
+    request.nextUrl.pathname !== '/' &&
+    request.nextUrl.pathname !== '/pricing'
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()

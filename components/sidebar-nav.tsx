@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { LayoutDashboard, Upload, MessageCircle, TrendingUp, Users } from 'lucide-react'
+import { LayoutDashboard, Upload, MessageCircle, TrendingUp, Users, Settings } from 'lucide-react'
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -10,6 +10,7 @@ const links = [
   { href: '/dashboard/projection', label: 'Projection', icon: TrendingUp },
   { href: '/dashboard/insider', label: 'Insider Trading', icon: Users },
   { href: '/dashboard/import', label: 'Import', icon: Upload },
+  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]
 
 export function SidebarNav() {

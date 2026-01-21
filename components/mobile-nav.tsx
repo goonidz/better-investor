@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { Menu, X, LayoutDashboard, MessageCircle, TrendingUp, Upload, LogOut, Users } from 'lucide-react'
+import { Menu, X, LayoutDashboard, MessageCircle, TrendingUp, Upload, LogOut, Users, Settings } from 'lucide-react'
 
 const links = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, exact: true },
@@ -11,6 +11,7 @@ const links = [
   { href: '/dashboard/projection', label: 'Projection', icon: TrendingUp },
   { href: '/dashboard/insider', label: 'Insider Trading', icon: Users },
   { href: '/dashboard/import', label: 'Import', icon: Upload },
+  { href: '/dashboard/settings', label: 'Settings', icon: Settings },
 ]
 
 export function MobileNav({ userEmail }: { userEmail: string }) {
