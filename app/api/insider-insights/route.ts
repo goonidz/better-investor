@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai'
 import { createClient } from '@supabase/supabase-js'
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY || '')
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
 
@@ -65,36 +65,36 @@ export async function POST(request: NextRequest) {
       generationConfig: {
         responseMimeType: 'application/json',
         responseSchema: {
-          type: 'object',
+          type: SchemaType.OBJECT,
           properties: {
-            headline: { type: 'string', description: 'One impactful factual sentence headline' },
-            summary: { type: 'string', description: '2-3 sentences factual summary of key insider activity' },
+            headline: { type: SchemaType.STRING, description: 'One impactful factual sentence headline' },
+            summary: { type: SchemaType.STRING, description: '2-3 sentences factual summary of key insider activity' },
             notable_buys: {
-              type: 'array',
+              type: SchemaType.ARRAY,
               items: {
-                type: 'object',
+                type: SchemaType.OBJECT,
                 properties: {
-                  ticker: { type: 'string' },
-                  company: { type: 'string', description: 'Brief company description (what they do)' },
-                  activity: { type: 'string', description: 'Factual description of the insider activity (who bought, how much)' }
+                  ticker: { type: SchemaType.STRING },
+                  company: { type: SchemaType.STRING, description: 'Brief company description (what they do)' },
+                  activity: { type: SchemaType.STRING, description: 'Factual description of the insider activity (who bought, how much)' }
                 }
               },
               description: 'Top 3 most significant buy signals'
             },
             notable_sells: {
-              type: 'array', 
+              type: SchemaType.ARRAY, 
               items: {
-                type: 'object',
+                type: SchemaType.OBJECT,
                 properties: {
-                  ticker: { type: 'string' },
-                  company: { type: 'string', description: 'Brief company description (what they do)' },
-                  activity: { type: 'string', description: 'Factual description of the insider activity (who sold, how much)' }
+                  ticker: { type: SchemaType.STRING },
+                  company: { type: SchemaType.STRING, description: 'Brief company description (what they do)' },
+                  activity: { type: SchemaType.STRING, description: 'Factual description of the insider activity (who sold, how much)' }
                 }
               },
               description: 'Top 3 most significant sell signals'
             },
             sentiment: { 
-              type: 'string', 
+              type: SchemaType.STRING, 
               enum: ['bullish', 'bearish', 'neutral'],
               description: 'Overall insider sentiment based on data'
             }
