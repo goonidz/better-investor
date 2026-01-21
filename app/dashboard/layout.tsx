@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { LogOut } from 'lucide-react'
 import { SidebarNav } from '@/components/sidebar-nav'
 import { MobileNav } from '@/components/mobile-nav'
+import { SupportChat } from '@/components/support-chat'
 
 export default async function DashboardLayout({
   children,
@@ -74,6 +75,9 @@ export default async function DashboardLayout({
           {children}
         </div>
       </main>
+
+      {/* Support Chat Widget */}
+      <SupportChat />
     </div>
   )
 }
