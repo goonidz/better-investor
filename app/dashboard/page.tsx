@@ -5,12 +5,13 @@ import { HoldingsTable, Holding } from '@/components/holdings-table'
 import { PortfolioChart } from '@/components/portfolio-chart'
 import { AIInsights } from '@/components/ai-insights'
 import { useEffect, useState, useCallback } from 'react'
-import { ArrowUpRight, Plus, Percent, DollarSign, Building2, Layers, Send, MessageCircle, Expand, X, RefreshCw, Search, Loader2, ChevronDown, TrendingUp, TrendingDown, Sparkles, AlertTriangle, BookOpen, Trash2 } from 'lucide-react'
+import { ArrowUpRight, Plus, Percent, DollarSign, Building2, Layers, Send, MessageCircle, Expand, X, RefreshCw, Search, Loader2, ChevronDown, TrendingUp, TrendingDown, Sparkles, AlertTriangle, BookOpen, Trash2, Lock, Zap } from 'lucide-react'
 import Link from 'next/link'
 
 export default function DashboardPage() {
   const [holdings, setHoldings] = useState<Holding[]>([])
   const [loading, setLoading] = useState(true)
+  const [plan, setPlan] = useState<string | null>(null)
   const [showPercent, setShowPercent] = useState(true)
   const [chartView, setChartView] = useState<'holdings' | 'sectors'>('holdings')
   const [performancePeriod, setPerformancePeriod] = useState<'7d' | '30d' | 'ytd' | 'total'>('total')
@@ -354,6 +355,12 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchData()
     fetchPortfolioHistory()
+    
+    // Check subscription
+    fetch('/api/subscription')
+      .then(res => res.json())
+      .then(data => setPlan(data.plan || 'free'))
+      .catch(() => setPlan('free'))
 
     // Auto-sync from cache on load (no API calls, instant)
     fetch('/api/market', {
@@ -822,9 +829,12 @@ export default function DashboardPage() {
           <div className="flex items-center gap-2">
             <MessageCircle className="w-4 h-4 text-zinc-400" />
             <h2 className="text-sm font-medium text-zinc-900">Ask AI</h2>
+            {plan !== 'deepdive' && (
+              <span className="px-1.5 py-0.5 bg-zinc-100 text-zinc-500 text-[10px] font-medium rounded">PRO</span>
+            )}
           </div>
           <div className="flex items-center gap-2">
-            {(chatQuestion || chatResponse) && (
+            {plan === 'deepdive' && (chatQuestion || chatResponse) && (
               <button
                 onClick={clearChat}
                 className="p-1.5 text-zinc-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
@@ -833,123 +843,147 @@ export default function DashboardPage() {
                 <Trash2 className="w-4 h-4" />
               </button>
             )}
-            <button
-              onClick={() => setChatExpanded(!chatExpanded)}
-              className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
-              title={chatExpanded ? 'Minimize' : 'Expand'}
-            >
-              {chatExpanded ? <X className="w-4 h-4" /> : <Expand className="w-4 h-4" />}
-            </button>
+            {plan === 'deepdive' && (
+              <button
+                onClick={() => setChatExpanded(!chatExpanded)}
+                className="p-1.5 text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 rounded-lg transition-colors"
+                title={chatExpanded ? 'Minimize' : 'Expand'}
+              >
+                {chatExpanded ? <X className="w-4 h-4" /> : <Expand className="w-4 h-4" />}
+              </button>
+            )}
             <Link 
-              href="/dashboard/chat" 
+              href={plan === 'deepdive' ? "/dashboard/chat" : "/pricing"}
               className="text-xs text-zinc-500 hover:text-zinc-700 transition-colors"
             >
-              Full chat →
+              {plan === 'deepdive' ? 'Full chat →' : 'Upgrade →'}
             </Link>
           </div>
         </div>
         
-        {/* Quick suggestions */}
-        {!chatQuestion && !chatLoading && (
-          <div className="flex flex-wrap gap-2 mb-4">
-            <button
-              onClick={() => sendQuickChat("How diversified is my portfolio?")}
-              className="text-xs px-3 py-1.5 bg-zinc-100 text-zinc-600 rounded-full hover:bg-zinc-200 transition-colors"
+        {/* Locked state for free users */}
+        {plan !== 'deepdive' ? (
+          <div className="text-center py-6">
+            <div className="w-12 h-12 bg-zinc-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+              <Lock className="w-6 h-6 text-zinc-400" />
+            </div>
+            <h3 className="font-medium text-zinc-900 mb-1">AI Assistant is a Pro feature</h3>
+            <p className="text-sm text-zinc-500 mb-4">
+              Get personalized portfolio analysis and insights
+            </p>
+            <Link
+              href="/pricing"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-zinc-900 text-white text-sm font-medium rounded-lg hover:bg-zinc-800 transition-colors"
             >
-              How diversified am I?
-            </button>
-            <button
-              onClick={() => sendQuickChat("What's my biggest risk?")}
-              className="text-xs px-3 py-1.5 bg-zinc-100 text-zinc-600 rounded-full hover:bg-zinc-200 transition-colors"
-            >
-              My biggest risk?
-            </button>
-            <button
-              onClick={() => sendQuickChat("Summarize my portfolio in one sentence")}
-              className="text-xs px-3 py-1.5 bg-zinc-100 text-zinc-600 rounded-full hover:bg-zinc-200 transition-colors"
-            >
-              Summarize my portfolio
-            </button>
+              <Zap className="w-4 h-4" />
+              Upgrade to Deepdive
+            </Link>
           </div>
-        )}
-
-        {/* Chat messages */}
-        {(chatQuestion || chatLoading) && (
-          <div className={`space-y-4 mb-4 ${chatExpanded ? 'flex-1 overflow-y-auto' : 'max-h-96 overflow-y-auto'}`}>
-            {/* User question */}
-            {chatQuestion && (
-              <div className="flex justify-end">
-                <div className="bg-zinc-900 text-white rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%]">
-                  <p className="text-sm">{chatQuestion}</p>
-                </div>
-              </div>
-            )}
-
-            {/* Loading */}
-            {chatLoading && (
-              <div className="flex justify-start">
-                <div className="bg-zinc-100 rounded-2xl rounded-tl-md px-4 py-2.5">
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                    <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                    <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* AI response */}
-            {chatResponse && (
-              <div className="flex justify-start">
-                <div className="bg-zinc-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-[85%]">
-                  <div 
-                    className="text-sm text-zinc-700 leading-relaxed"
-                    dangerouslySetInnerHTML={{ 
-                      __html: chatResponse
-                        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                        .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                        .replace(/###\s?(.*?)(\n|$)/g, '<strong class="text-zinc-900 block mt-3 mb-1">$1</strong>')
-                        .replace(/##\s?(.*?)(\n|$)/g, '<strong class="text-zinc-900 text-base block mt-4 mb-2">$1</strong>')
-                        .replace(/\n/g, '<br/>')
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Clear button */}
-            {chatResponse && (
-              <div className="flex justify-center">
-                <button 
-                  onClick={clearChat}
-                  className="text-xs text-zinc-500 hover:text-zinc-700 px-3 py-1"
+        ) : (
+          <>
+            {/* Quick suggestions */}
+            {!chatQuestion && !chatLoading && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                <button
+                  onClick={() => sendQuickChat("How diversified is my portfolio?")}
+                  className="text-xs px-3 py-1.5 bg-zinc-100 text-zinc-600 rounded-full hover:bg-zinc-200 transition-colors"
                 >
-                  Clear conversation
+                  How diversified am I?
+                </button>
+                <button
+                  onClick={() => sendQuickChat("What's my biggest risk?")}
+                  className="text-xs px-3 py-1.5 bg-zinc-100 text-zinc-600 rounded-full hover:bg-zinc-200 transition-colors"
+                >
+                  My biggest risk?
+                </button>
+                <button
+                  onClick={() => sendQuickChat("Summarize my portfolio in one sentence")}
+                  className="text-xs px-3 py-1.5 bg-zinc-100 text-zinc-600 rounded-full hover:bg-zinc-200 transition-colors"
+                >
+                  Summarize my portfolio
                 </button>
               </div>
             )}
-          </div>
-        )}
 
-        {/* Input */}
-        <div className={`flex items-center gap-2 ${chatExpanded ? 'mt-auto pt-4 border-t border-zinc-100' : ''}`}>
-          <input
-            type="text"
-            value={chatInput}
-            onChange={(e) => setChatInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendQuickChat()}
-            placeholder="Ask anything about your portfolio..."
-            disabled={chatLoading}
-            className="flex-1 px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent disabled:opacity-50"
-          />
-          <button
-            onClick={() => sendQuickChat()}
-            disabled={!chatInput.trim() || chatLoading}
-            className="shrink-0 w-10 h-10 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-          >
-            <Send className="w-4 h-4" />
-          </button>
-        </div>
+            {/* Chat messages */}
+            {(chatQuestion || chatLoading) && (
+              <div className={`space-y-4 mb-4 ${chatExpanded ? 'flex-1 overflow-y-auto' : 'max-h-96 overflow-y-auto'}`}>
+                {/* User question */}
+                {chatQuestion && (
+                  <div className="flex justify-end">
+                    <div className="bg-zinc-900 text-white rounded-2xl rounded-tr-md px-4 py-2.5 max-w-[85%]">
+                      <p className="text-sm">{chatQuestion}</p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Loading */}
+                {chatLoading && (
+                  <div className="flex justify-start">
+                    <div className="bg-zinc-100 rounded-2xl rounded-tl-md px-4 py-2.5">
+                      <div className="flex items-center gap-1.5">
+                        <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-zinc-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* AI response */}
+                {chatResponse && (
+                  <div className="flex justify-start">
+                    <div className="bg-zinc-100 rounded-2xl rounded-tl-md px-4 py-3 max-w-[85%]">
+                      <div 
+                        className="text-sm text-zinc-700 leading-relaxed"
+                        dangerouslySetInnerHTML={{ 
+                          __html: chatResponse
+                            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                            .replace(/###\s?(.*?)(\n|$)/g, '<strong class="text-zinc-900 block mt-3 mb-1">$1</strong>')
+                            .replace(/##\s?(.*?)(\n|$)/g, '<strong class="text-zinc-900 text-base block mt-4 mb-2">$1</strong>')
+                            .replace(/\n/g, '<br/>')
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Clear button */}
+                {chatResponse && (
+                  <div className="flex justify-center">
+                    <button 
+                      onClick={clearChat}
+                      className="text-xs text-zinc-500 hover:text-zinc-700 px-3 py-1"
+                    >
+                      Clear conversation
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Input */}
+            <div className={`flex items-center gap-2 ${chatExpanded ? 'mt-auto pt-4 border-t border-zinc-100' : ''}`}>
+              <input
+                type="text"
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && sendQuickChat()}
+                placeholder="Ask anything about your portfolio..."
+                disabled={chatLoading}
+                className="flex-1 px-4 py-2.5 bg-zinc-50 border border-zinc-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-zinc-900 focus:border-transparent disabled:opacity-50"
+              />
+              <button
+                onClick={() => sendQuickChat()}
+                disabled={!chatInput.trim() || chatLoading}
+                className="shrink-0 w-10 h-10 bg-zinc-900 text-white rounded-lg hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+              >
+                <Send className="w-4 h-4" />
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
       {/* Holdings Table */}
