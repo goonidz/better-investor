@@ -38,10 +38,10 @@ alter table admin_users enable row level security;
 alter table support_conversations enable row level security;
 alter table support_messages enable row level security;
 
--- Admin users: only admins can read
-create policy "Admins can read admin_users"
+-- Admin users: users can check if they are admin
+create policy "Users can check own admin status"
   on admin_users for select
-  using (auth.uid() in (select user_id from admin_users));
+  using (auth.uid() = user_id);
 
 -- Support conversations: users see their own, admins see all
 create policy "Users can read own conversations"
