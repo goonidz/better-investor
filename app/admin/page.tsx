@@ -55,37 +55,31 @@ export default function AdminDashboard() {
       label: 'Total Users',
       value: stats?.totalUsers || 0,
       icon: Users,
-      color: 'bg-blue-500',
     },
     {
       label: 'Paid Users',
       value: stats?.paidUsers || 0,
       icon: CreditCard,
-      color: 'bg-green-500',
     },
     {
       label: 'Active Trials',
       value: stats?.activeTrials || 0,
       icon: TrendingUp,
-      color: 'bg-amber-500',
     },
     {
       label: 'Open Tickets',
       value: stats?.openTickets || 0,
       icon: MessageSquare,
-      color: 'bg-red-500',
     },
     {
       label: 'Total Portfolio Value',
       value: formatCurrency(stats?.totalPortfolioValue || 0),
       icon: DollarSign,
-      color: 'bg-purple-500',
     },
     {
       label: 'Signups (7 days)',
       value: stats?.recentSignups || 0,
       icon: UserPlus,
-      color: 'bg-indigo-500',
     },
   ]
 
@@ -101,8 +95,8 @@ export default function AdminDashboard() {
         {statCards.map((stat) => (
           <div key={stat.label} className="bg-white rounded-xl border border-zinc-200 p-6">
             <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 ${stat.color} rounded-xl flex items-center justify-center`}>
-                <stat.icon className="w-6 h-6 text-white" />
+              <div className="w-12 h-12 bg-zinc-100 rounded-xl flex items-center justify-center">
+                <stat.icon className="w-6 h-6 text-zinc-600" />
               </div>
               <div>
                 <p className="text-2xl font-bold text-zinc-900">{stat.value}</p>
@@ -122,7 +116,7 @@ export default function AdminDashboard() {
         </div>
         <div className="mt-4 h-3 bg-zinc-100 rounded-full overflow-hidden">
           <div 
-            className="h-full bg-green-500 rounded-full transition-all"
+            className="h-full bg-zinc-900 rounded-full transition-all"
             style={{ width: `${stats?.conversionRate || 0}%` }}
           />
         </div>

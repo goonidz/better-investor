@@ -138,9 +138,9 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                        user.status === 'active' ? 'bg-green-100 text-green-700' :
-                        user.status === 'trialing' ? 'bg-blue-100 text-blue-700' :
-                        user.status === 'canceled' ? 'bg-red-100 text-red-700' :
+                        user.status === 'active' ? 'bg-zinc-900 text-white' :
+                        user.status === 'trialing' ? 'bg-zinc-200 text-zinc-700' :
+                        user.status === 'canceled' ? 'bg-zinc-100 text-zinc-500' :
                         'bg-zinc-100 text-zinc-600'
                       }`}>
                         {user.status}

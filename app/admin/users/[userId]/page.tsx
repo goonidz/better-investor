@@ -193,8 +193,8 @@ export default function AdminUserDetailPage({ params }: { params: Promise<{ user
           {/* AI Credits */}
           <div className="bg-white rounded-xl border border-zinc-200 p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Zap className="w-5 h-5 text-purple-600" />
+              <div className="w-10 h-10 bg-zinc-100 rounded-lg flex items-center justify-center">
+                <Zap className="w-5 h-5 text-zinc-600" />
               </div>
               <div>
                 <p className="font-semibold text-zinc-900">AI Credits</p>

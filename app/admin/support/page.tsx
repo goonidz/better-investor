@@ -136,11 +136,11 @@ export default function AdminSupportPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'open':
-        return <span className="px-2 py-0.5 text-xs font-medium bg-red-100 text-red-700 rounded-full">Open</span>
+        return <span className="px-2 py-0.5 text-xs font-medium bg-zinc-900 text-white rounded-full">Open</span>
       case 'pending':
-        return <span className="px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">Pending</span>
+        return <span className="px-2 py-0.5 text-xs font-medium bg-zinc-200 text-zinc-700 rounded-full">Pending</span>
       case 'closed':
-        return <span className="px-2 py-0.5 text-xs font-medium bg-green-100 text-green-700 rounded-full">Closed</span>
+        return <span className="px-2 py-0.5 text-xs font-medium bg-zinc-100 text-zinc-500 rounded-full">Closed</span>
       default:
         return null
     }
@@ -195,7 +195,7 @@ export default function AdminSupportPage() {
                       {conv.subject || 'Support Request'}
                     </span>
                     {conv.unread_count > 0 && (
-                      <span className="ml-2 w-5 h-5 bg-red-500 text-white text-xs font-medium rounded-full flex items-center justify-center">
+                      <span className="ml-2 w-5 h-5 bg-zinc-900 text-white text-xs font-medium rounded-full flex items-center justify-center">
                         {conv.unread_count}
                       </span>
                     )}
@@ -234,7 +234,7 @@ export default function AdminSupportPage() {
                   {selectedConversation.status !== 'closed' && (
                     <button
                       onClick={() => updateStatus('closed')}
-                      className="flex items-center gap-1 px-3 py-1.5 text-sm bg-green-100 text-green-700 rounded-lg hover:bg-green-200"
+                      className="flex items-center gap-1 px-3 py-1.5 text-sm bg-zinc-900 text-white rounded-lg hover:bg-zinc-800"
                     >
                       <CheckCircle className="w-4 h-4" />
                       Close
