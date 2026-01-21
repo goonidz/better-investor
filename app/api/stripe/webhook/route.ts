@@ -29,12 +29,17 @@ export async function POST(request: NextRequest) {
         if (userId && session.subscription) {
           const subscription = await stripe.subscriptions.retrieve(session.subscription as string)
           
+          // Get period end from subscription or from items
+          const periodEnd = subscription.current_period_end 
+            || subscription.items?.data?.[0]?.current_period_end
+            || subscription.trial_end
+          
           await upsertSubscription(userId, {
             stripe_customer_id: session.customer as string,
             stripe_subscription_id: subscription.id,
             plan: 'deepdive',
             status: subscription.status === 'trialing' ? 'trialing' : 'active',
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
           })
         }
         break
@@ -52,9 +57,14 @@ export async function POST(request: NextRequest) {
           else if (subscription.status === 'past_due') status = 'past_due'
           else if (subscription.status === 'canceled' || subscription.cancel_at_period_end) status = 'canceled'
           
+          // Get period end from subscription or from items
+          const periodEnd = subscription.current_period_end 
+            || subscription.items?.data?.[0]?.current_period_end
+            || subscription.trial_end
+          
           await upsertSubscription(existingSub.user_id, {
             status,
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_end: periodEnd ? new Date(periodEnd * 1000).toISOString() : null,
           })
         }
         break
