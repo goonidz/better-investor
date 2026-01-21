@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Send, Trash2, AlertTriangle, Bot, User, Loader2, Plus, MessageSquare, ChevronRight } from 'lucide-react'
+import { UpgradePrompt } from '@/components/upgrade-prompt'
 
 interface Message {
   id: string
@@ -36,14 +37,34 @@ export default function ChatPage() {
   const [credits, setCredits] = useState<Credits | null>(null)
   const [error, setError] = useState<string | null>(null)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const [plan, setPlan] = useState<string | null>(null)
+  const [checkingPlan, setCheckingPlan] = useState(true)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
   useEffect(() => {
-    loadConversations()
+    checkSubscription()
   }, [])
+
+  const checkSubscription = async () => {
+    try {
+      const res = await fetch('/api/subscription')
+      const data = await res.json()
+      setPlan(data.plan || 'free')
+    } catch (err) {
+      setPlan('free')
+    } finally {
+      setCheckingPlan(false)
+    }
+  }
+
+  useEffect(() => {
+    if (plan === 'deepdive') {
+      loadConversations()
+    }
+  }, [plan])
 
   useEffect(() => {
     scrollToBottom()
@@ -209,6 +230,19 @@ export default function ChatPage() {
   const creditPercentage = credits ? parseFloat(credits.percentage_used) : 0
   const isLowCredits = creditPercentage >= 80
   const [showSidebar, setShowSidebar] = useState(false)
+
+  // Check if user has access
+  if (checkingPlan) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+      </div>
+    )
+  }
+
+  if (plan !== 'deepdive') {
+    return <UpgradePrompt feature="ai-chat" />
+  }
 
   return (
     <div className="h-[calc(100vh-8rem)] sm:h-[calc(100vh-10rem)] flex flex-col lg:flex-row gap-4 lg:gap-6">

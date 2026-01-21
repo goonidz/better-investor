@@ -7,6 +7,7 @@ import { parseCSV } from '@/lib/parsers/csv-parser'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
 import { Check, Loader2, History, RotateCcw, Trash2, ChevronDown, ChevronUp, FileText, Sparkles, AlertCircle, Upload, FileSpreadsheet } from 'lucide-react'
+import { UpgradePrompt } from '@/components/upgrade-prompt'
 
 interface ImportHistoryItem {
   id: string
@@ -28,12 +29,29 @@ export default function ImportPage() {
   const [importHistory, setImportHistory] = useState<ImportHistoryItem[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [restoring, setRestoring] = useState<string | null>(null)
+  const [plan, setPlan] = useState<string | null>(null)
+  const [checkingPlan, setCheckingPlan] = useState(true)
   const router = useRouter()
   const supabase = createClient()
 
   useEffect(() => {
-    fetchHistory()
+    checkSubscription()
   }, [])
+
+  const checkSubscription = async () => {
+    try {
+      const res = await fetch('/api/subscription')
+      const data = await res.json()
+      setPlan(data.plan || 'free')
+      if (data.plan === 'deepdive') {
+        fetchHistory()
+      }
+    } catch (err) {
+      setPlan('free')
+    } finally {
+      setCheckingPlan(false)
+    }
+  }
 
   const fetchHistory = async () => {
     try {
@@ -266,6 +284,19 @@ export default function ImportPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  // Check if user has access
+  if (checkingPlan) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+      </div>
+    )
+  }
+
+  if (plan !== 'deepdive') {
+    return <UpgradePrompt feature="import" />
   }
 
   return (

@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { Calculator, Calendar, PiggyBank, Sparkles, History, Save, Trash2 } from 'lucide-react'
+import { Calculator, Calendar, PiggyBank, Sparkles, History, Save, Trash2, Loader2 } from 'lucide-react'
+import { UpgradePrompt } from '@/components/upgrade-prompt'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -89,13 +90,32 @@ export default function ProjectionPage() {
   const [savedProjections, setSavedProjections] = useState<SavedProjection[]>([])
   const [showHistory, setShowHistory] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [plan, setPlan] = useState<string | null>(null)
+  const [checkingPlan, setCheckingPlan] = useState(true)
   
   const chartRef = useRef<HTMLCanvasElement>(null)
   const chartInstance = useRef<ChartJS | null>(null)
   const supabase = createClient()
 
+  // Check subscription
+  useEffect(() => {
+    const checkSubscription = async () => {
+      try {
+        const res = await fetch('/api/subscription')
+        const data = await res.json()
+        setPlan(data.plan || 'free')
+      } catch (err) {
+        setPlan('free')
+      } finally {
+        setCheckingPlan(false)
+      }
+    }
+    checkSubscription()
+  }, [])
+
   // Auto-fill with user's portfolio data
   useEffect(() => {
+    if (plan !== 'deepdive') return
     const loadPortfolioData = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser()
@@ -437,6 +457,19 @@ export default function ProjectionPage() {
       }
     }
   }, [result, currentAge])
+
+  // Check if user has access
+  if (checkingPlan) {
+    return (
+      <div className="flex items-center justify-center h-[60vh]">
+        <Loader2 className="w-6 h-6 animate-spin text-zinc-400" />
+      </div>
+    )
+  }
+
+  if (plan !== 'deepdive') {
+    return <UpgradePrompt feature="projections" />
+  }
 
   if (loading) {
     return (

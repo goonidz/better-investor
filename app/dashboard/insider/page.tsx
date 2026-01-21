@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { RefreshCw, TrendingUp, TrendingDown, Users, DollarSign, Calendar, Search, Clock, Info, Sparkles, ArrowUpRight, ArrowDownRight } from 'lucide-react'
+import { RefreshCw, TrendingUp, TrendingDown, Users, DollarSign, Calendar, Search, Clock, Info, Sparkles, ArrowUpRight, ArrowDownRight, Lock } from 'lucide-react'
+import Link from 'next/link'
 
 interface InsiderInsight {
   headline: string
@@ -126,10 +127,26 @@ export default function InsiderPage() {
   const [expandedCols, setExpandedCols] = useState<Set<string>>(new Set())
   const [displayLimit, setDisplayLimit] = useState(50)
   const [totalCount, setTotalCount] = useState(0)
+  const [plan, setPlan] = useState<string | null>(null)
+
+  useEffect(() => {
+    checkSubscription()
+    loadData()
+  }, [])
 
   useEffect(() => {
     loadData()
   }, [category])
+
+  const checkSubscription = async () => {
+    try {
+      const res = await fetch('/api/subscription')
+      const data = await res.json()
+      setPlan(data.plan || 'free')
+    } catch (err) {
+      setPlan('free')
+    }
+  }
 
   const loadData = async () => {
     setLoading(true)
@@ -213,10 +230,12 @@ export default function InsiderPage() {
     }
   }
 
-  // Load insight on mount
+  // Load insight on mount (only for paid users)
   useEffect(() => {
-    loadInsight()
-  }, [])
+    if (plan === 'deepdive') {
+      loadInsight()
+    }
+  }, [plan])
 
   const formatValue = (value: number | null) => {
     if (value === null || value === undefined) return '-'
@@ -320,7 +339,27 @@ export default function InsiderPage() {
       </div>
 
       {/* AI Insight */}
-      {(insight || insightLoading) && (
+      {plan !== 'deepdive' ? (
+        <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-zinc-200 rounded-lg flex items-center justify-center">
+                <Lock className="w-5 h-5 text-zinc-400" />
+              </div>
+              <div>
+                <p className="font-medium text-zinc-900 text-sm">AI Insights</p>
+                <p className="text-xs text-zinc-500">Upgrade to unlock AI analysis of insider activity</p>
+              </div>
+            </div>
+            <Link
+              href="/pricing"
+              className="px-4 py-2 bg-zinc-900 text-white text-sm font-medium rounded-lg hover:bg-zinc-800 transition-colors"
+            >
+              Upgrade
+            </Link>
+          </div>
+        </div>
+      ) : (insight || insightLoading) && (
         <div className={`rounded-xl border p-4 ${
           insight?.sentiment === 'bullish' ? 'bg-emerald-50/50 border-emerald-100' :
           insight?.sentiment === 'bearish' ? 'bg-red-50/50 border-red-100' :
