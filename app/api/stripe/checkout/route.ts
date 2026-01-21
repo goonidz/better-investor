@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
           supabase_user_id: user.id,
         },
       },
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/dashboard?upgraded=true`,
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/checkout/success`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/pricing`,
       metadata: {
         supabase_user_id: user.id,
